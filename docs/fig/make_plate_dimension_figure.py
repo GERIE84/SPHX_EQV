@@ -163,41 +163,75 @@ def panel_section(ax):
     ax.text(-p - 1.3, -H / 2 - 0.78, "Profile options: (1) sinusoidal → $p,H,t$   (2) arc + tangent → $p,H,t,R_c,R_v,\\alpha$ (or $T_L$)   (3) trapezoidal → $p,H,t,\\alpha$, flat widths", fontsize=8.5, color=GREY)
     ax.text(-p - 1.3, -H / 2 - 0.96, "Local axes: $x$ = across ridges (this section, flexible), $y$ = along ridges (stiff), $z$ = plate normal", fontsize=8.5, color=GREY)
     ax.set_xlim(-p - 1.35, 2 * p + 1.2); ax.set_ylim(-H / 2 - 1.1, H / 2 + 0.95); ax.set_aspect("equal"); ax.axis("off")
-    ax.set_title("(b) Section A–A  —  perpendicular to ridge (arc + tangent profile shown)", loc="left", fontsize=12, fontweight="bold")
+    ax.set_title("(b) Section A–A, perpendicular to ridge (arc + tangent profile)", loc="left", fontsize=12, fontweight="bold")
     ax.legend(loc="upper right", fontsize=9, frameon=False)
 
 
 # ----------------------------------------------------------------------------- (c) axes / chevron angle
 def panel_axes(ax):
     beta = np.radians(60)
-    for sgn, x0, lab in ((+1, 0.0, r"$+\beta$ zone"), (-1, 2.4, r"$-\beta$ zone")):
-        sq = Polygon([[x0, 0], [x0 + 2, 0], [x0 + 2, 2], [x0, 2]], closed=True, fc="#f4f6f7", ec="k", lw=1.2)
-        ax.add_patch(sq)
-        for k in np.arange(-3, 4, 0.35):
-            xs = np.linspace(x0, x0 + 2, 50)
-            ys = k + sgn * (xs - x0) / np.tan(beta)
-            m = (ys >= 0) & (ys <= 2)
-            ax.plot(np.where(m, xs, np.nan), np.where(m, ys, np.nan), color=BLUE, lw=0.9)
-        ax.text(x0 + 1, 2.08, lab, ha="center", fontsize=10, color=BLUE)
-    # plate axes
-    ax.annotate("", (0, 2.6), (0, 0), arrowprops=dict(arrowstyle="->", color="k", lw=1.5))
-    ax.annotate("", (5.0, 0), (0, 0), arrowprops=dict(arrowstyle="->", color="k", lw=1.5))
-    ax.text(0.05, 2.6, r"$y_p$ (flow)", fontsize=11); ax.text(5.0, -0.08, r"$x_p$", fontsize=11, va="top")
-    # local axes in +beta zone at its center
-    cx, cy = 1.0, 1.0
-    ey = np.array([np.sin(beta), np.cos(beta)])        # along ridge  (y)
-    ex = np.array([np.cos(beta), -np.sin(beta)])       # across ridge (x)
-    for e, lab, col in ((ey, r"$y$ (along ridge)", GREEN), (ex, r"$x$ (across ridge)", RED)):
-        ax.annotate("", (cx + 0.9 * e[0], cy + 0.9 * e[1]), (cx, cy), arrowprops=dict(arrowstyle="->", color=col, lw=2.0))
-        ax.text(cx + 1.0 * e[0], cy + 1.0 * e[1], lab, color=col, fontsize=10, ha="left", va="center")
-    ax.plot([cx, cx], [cy, cy + 0.9], color=GREY, lw=1, ls=":")
-    ax.add_patch(Arc((cx, cy), 1.1, 1.1, angle=0, theta1=90 - np.degrees(beta), theta2=90, color=GREEN, lw=1.4))
-    ax.text(cx + 0.18, cy + 0.62, r"$\beta$", color=GREEN, fontsize=14)
-    ax.text(0.0, -0.45, r"$\beta$ = angle between ridge line ($y$) and flow axis ($y_p$).  Adjacent plate is rotated 180°, so its ridges are at $-\beta$ (cross-corrugated channel).",
-            fontsize=8.5, color=GREY)
-    ax.text(0.0, -0.68, r"Equivalent stiffness: compute $\bar A,\bar D$ in local $(x,y)$, then rotate by $\pm\beta$ into $(x_p,y_p)$.", fontsize=8.5, color=GREY)
-    ax.set_xlim(-0.3, 5.3); ax.set_ylim(-0.85, 2.9); ax.set_aspect("equal"); ax.axis("off")
-    ax.set_title("(c) Axis convention and chevron angle", loc="left", fontsize=12, fontweight="bold")
+    cot = 1 / np.tan(beta)
+    W, Hh = 6.0, 3.2                      # one patch of plate n (plan view, V-shaped ridges)
+    xc = W / 2
+    ax.add_patch(Polygon([[0, 0], [W, 0], [W, Hh], [0, Hh]], closed=True, fc="#f4f6f7", ec="k", lw=1.4))
+    xs = np.linspace(0, W, 400)
+    for k in np.arange(-W / 2 * cot - 0.3, Hh + 0.3, 0.30):
+        ys = k + np.abs(xs - xc) * cot
+        m = (ys >= 0) & (ys <= Hh)
+        ax.plot(np.where(m, xs, np.nan), np.where(m, ys, np.nan), color=BLUE, lw=0.9)
+    ax.plot([xc, xc], [0, Hh], color=GREY, ls="-.", lw=0.9)
+    ax.text(xc + 0.06, 0.12, "apex line", color=GREY, fontsize=9, bbox=dict(fc="white", ec="none", pad=1))
+    ax.text(W * 0.25, Hh + 0.10, r"left half: ridges at $-\beta$", ha="center", color=BLUE, fontsize=10.5)
+    ax.text(W * 0.75, Hh + 0.10, r"right half: ridges at $+\beta$", ha="center", color=BLUE, fontsize=10.5)
+    ax.text(0.0, Hh + 0.45, "Plate $n$  (plan-view patch)", fontsize=11, fontweight="bold")
+    ax.annotate("", (xc, -0.05), (xc, -0.65), arrowprops=dict(arrowstyle="->", color="k", lw=1.6))
+    ax.text(xc + 0.12, -0.42, "flow (port to port) = $y_p$", fontsize=9.5)
+
+    def local_axes(px, py, sgn, lab_beta):
+        ey = np.array([sgn * np.sin(beta), np.cos(beta)])          # along ridge
+        ex = np.array([sgn * np.cos(beta), -np.sin(beta)])         # across ridge (perpendicular), pointing away from apex and down
+        ax.plot([px, px], [py, py + 1.05], color="k", lw=1.0, ls=":")       # y_p reference
+        ax.text(px + 0.04, py + 1.07, r"$y_p$", fontsize=9, va="bottom", ha="left")
+        ax.annotate("", (px + 1.0 * ey[0], py + 1.0 * ey[1]), (px, py), arrowprops=dict(arrowstyle="->", color=GREEN, lw=2.2))
+        ax.annotate("", (px + 0.8 * ex[0], py + 0.8 * ex[1]), (px, py), arrowprops=dict(arrowstyle="->", color=RED, lw=2.2))
+        ax.text(px + 1.1 * ey[0], py + 1.1 * ey[1], r"$y$  ($\parallel$ ridge)", color=GREEN, fontsize=9.5,
+                ha="left" if sgn > 0 else "right", va="center", bbox=dict(fc="white", ec="none", pad=0.5))
+        ax.text(px + 0.95 * ex[0], py + 0.95 * ex[1], r"$x$  ($\perp$ ridge)", color=RED, fontsize=9.5,
+                ha="left" if sgn > 0 else "right", va="top", bbox=dict(fc="white", ec="none", pad=0.5))
+        th = np.degrees(beta)
+        t1, t2 = (90 - th, 90) if sgn > 0 else (90, 90 + th)
+        ax.add_patch(Arc((px, py), 1.3, 1.3, angle=0, theta1=t1, theta2=t2, color=GREEN, lw=1.5))
+        ax.text(px + sgn * 0.42, py + 0.74, lab_beta, color=GREEN, fontsize=13, ha="center")
+        ax.plot(px, py, "ko", ms=3)
+
+    local_axes(xc + 1.6, 1.0, +1, r"$+\beta$")
+    local_axes(xc - 1.6, 1.0, -1, r"$-\beta$")
+    # plate axes (bottom-left)
+    ax.annotate("", (-0.6, 0.9), (-0.6, -0.45), arrowprops=dict(arrowstyle="->", color="k", lw=1.5))
+    ax.annotate("", (0.9, -0.45), (-0.6, -0.45), arrowprops=dict(arrowstyle="->", color="k", lw=1.5))
+    ax.text(-0.57, 0.92, r"$y_p$", fontsize=11); ax.text(0.95, -0.45, r"$x_p$", fontsize=11, va="center")
+
+    # adjacent plate n+1 (rotated 180 deg): inverted V
+    x1, w1, h1 = W + 1.1, 2.4, 3.2
+    xc1 = x1 + w1 / 2
+    ax.add_patch(Polygon([[x1, 0], [x1 + w1, 0], [x1 + w1, h1], [x1, h1]], closed=True, fc="#fdf2f0", ec="k", lw=1.2))
+    xs1 = np.linspace(x1, x1 + w1, 200)
+    for k in np.arange(-0.3, h1 + w1 / 2 * cot + 0.3, 0.30):
+        ys = k - np.abs(xs1 - xc1) * cot
+        m = (ys >= 0) & (ys <= h1)
+        ax.plot(np.where(m, xs1, np.nan), np.where(m, ys, np.nan), color=RED, lw=0.9, alpha=0.8)
+    ax.plot([xc1, xc1], [0, h1], color=GREY, ls="-.", lw=0.9)
+    ax.text(x1, h1 + 0.45, "Plate $n+1$", fontsize=11, fontweight="bold")
+    ax.text(x1, h1 + 0.10, "(= plate $n$ rotated 180°)", fontsize=9.5, color=GREY)
+    ax.annotate("", (x1 - 0.1, h1 / 2), (W + 0.1, h1 / 2), arrowprops=dict(arrowstyle="<->", color=GREY, lw=1.0))
+    ax.text((W + x1) / 2, h1 / 2 + 0.08, "stacked", fontsize=8.5, color=GREY, ha="center")
+
+    ax.text(0.0, -0.95, r"$\beta$ = angle between a ridge line ($y$) and the flow axis ($y_p$), measured in the plane of the plate.  "
+                        r"If a drawing gives the angle from $x_p$ (horizontal), then $\beta = 90° -$ that angle.", fontsize=9, color=GREY)
+    ax.text(0.0, -1.20, r"Equivalent stiffness: compute $\bar A,\bar D$ in the local $(x,y)$ axes of one half, then rotate by $+\beta$ (right half) or $-\beta$ (left half) into plate axes $(x_p,y_p)$.", fontsize=9, color=GREY)
+    ax.text(0.0, -1.45, r"Stacking: plate $n+1$ is plate $n$ rotated 180°, so the ridges of the two plates cross at an angle $2\beta$ and touch at crest-to-crest points (cross-corrugated channel).", fontsize=9, color=GREY)
+    ax.set_xlim(-0.9, x1 + w1 + 0.3); ax.set_ylim(-1.6, Hh + 0.8); ax.set_aspect("equal"); ax.axis("off")
+    ax.set_title(r"(c) Axis convention and chevron angle $\beta$", loc="left", fontsize=12, fontweight="bold")
 
 
 # ----------------------------------------------------------------------------- (d) stack
@@ -219,17 +253,17 @@ def panel_stack(ax):
     xd = -p - 0.5
     dim_v(ax, xd, sp, 2 * sp, r"$s_p$ (plate pitch)", off=-0.06, ha="right", fs=11)
     dim_v(ax, 2 * p + 0.5, sp - H / 2 + t / 2, sp + H / 2 - t / 2, r"$b_{ch}$ (channel gap)", off=0.06, fs=11)
-    ax.text(-p - 1.2, -H / 2 - 0.50, "Adjacent plates rotated 180° → ridges cross at $\\pm\\beta$; this section is schematic.", fontsize=8.5, color=GREY)
+    ax.text(-p - 1.2, -H / 2 - 0.50, "Adjacent plates are rotated 180° so their ridges cross at $2\\beta$; this section is schematic (cut is not perpendicular to both ridge sets).", fontsize=8.5, color=GREY)
     ax.text(-p - 1.2, -H / 2 - 0.68, "Plate count $N_p$ and channel pattern (1-pass / 2-pass) → fill in the form.", fontsize=8.5, color=GREY)
     ax.set_xlim(-p - 1.3, 2 * p + 1.5); ax.set_ylim(-H / 2 - 0.85, 2 * sp + H / 2 + 0.5); ax.set_aspect("equal"); ax.axis("off")
     ax.set_title("(d) Stack section (schematic)  —  plate pitch and channel gap", loc="left", fontsize=12, fontweight="bold")
 
 
 if __name__ == "__main__":
-    fig = plt.figure(figsize=(18, 12.5))
-    gs = fig.add_gridspec(2, 2, width_ratios=[1, 1.35], height_ratios=[1.15, 1])
+    fig = plt.figure(figsize=(17, 20))
+    gs = fig.add_gridspec(3, 2, width_ratios=[1, 1.3], height_ratios=[1.25, 1.0, 0.85])
     panel_plan(fig.add_subplot(gs[0, 0])); panel_section(fig.add_subplot(gs[0, 1]))
-    panel_axes(fig.add_subplot(gs[1, 0])); panel_stack(fig.add_subplot(gs[1, 1]))
+    panel_axes(fig.add_subplot(gs[1, :])); panel_stack(fig.add_subplot(gs[2, :]))
     fig.suptitle("SPHX chevron plate — dimension definition sheet  (fill values in docs/04_plate_dimension_form.md)", fontsize=14, fontweight="bold", y=0.995)
     fig.tight_layout(rect=(0, 0, 1, 0.975))
     fig.savefig("/home/user/SPHX_EQV/docs/fig/plate_dimensions.png", dpi=150)

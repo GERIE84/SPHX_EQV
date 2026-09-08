@@ -3,8 +3,11 @@
 문헌조사 이후 Claude Code로 이관하여 진행할 작업을 정리한다.
 
 ## A. 문헌조사 마무리
-- [ ] Lang & Su (2022) 원문에서 등가 굽힘강성 수식과 단면 파라미터 정의를 추출하여 `docs/02_literature.md`에 기입
+- [x] Lang & Su (2022) 원문에서 등가 굽힘강성 수식과 단면 파라미터 정의를 추출하여 `docs/02_literature.md`에 기입 (2026-09-08. 원문 `docs/ref/`, 수식 검증 `calc/verify_langsu_tables.py`)
 - [ ] Briassoulis, Samanta & Mukhopadhyay, Xia et al. 등가 강성식 비교표 작성
+  - [x] Xia (2012) / Lang & Su (2022) / Ye (2014) 수식 비교표 및 수치표(Table 5·6) — `02_literature.md` §1.5, §1.7
+  - [ ] Briassoulis (1986), Samanta & Mukhopadhyay (1999) 원문 수식 추가 — **원문 PDF 필요**
+  - [ ] Xia (2012), Ye (2014) 원문 확보 — 면내 강성 기준식·유도 절차·연성 강성 확인용 — **원문 PDF 필요**
 - [ ] 쉐브론 판 강성/좌굴 관련 문헌 확보
 
 ## B. 형상 파라미터 및 수식 정리

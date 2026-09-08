@@ -25,6 +25,8 @@ docs/
   01_plan.md              개발 계획 및 로드맵
   02_literature.md        문헌조사 (등가 직교이방성 모델 중심)
   03_next_steps.md        Claude Code 이관 이후 작업 항목
+  04_plate_dimension_form.md  전열판 치수 정의 그림 및 입력 양식
+  fig/                    그림 및 생성 스크립트
 calc/                     등가 수식 계산 스크립트 (verify_{langsu,ye,xia}_tables.py: 문헌 수치 재현 검증)
 fea/                      (예정) 등가 물성치 FE 검증 모델
 ```

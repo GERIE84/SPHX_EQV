@@ -55,7 +55,7 @@ $$\{N_x,N_y,N_{xy},M_x,M_y,M_{xy}\}^T=\mathrm{diag}\!\left(\begin{bmatrix}\bar A
 원판(등방성 박판)의 국부좌표 구성관계 — Eq. (3):
 $A_{11}=A_{22}=\frac{Eh}{1-\nu^2},\ A_{12}=\frac{\nu Eh}{1-\nu^2},\ A_{66}=\frac{Eh}{2(1+\nu)},\ D_{11}=D_{22}=\frac{Eh^3}{12(1-\nu^2)},\ D_{12}=\frac{\nu Eh^3}{12(1-\nu^2)},\ D_{66}=\frac{Eh^3}{24(1+\nu)}$
 
-### 1.3 유도 절차 — RVE 등가 에너지법 / 등가 힘법 (Xia et al. 2012 절차, Table 1)
+### 1.3 유도 절차 — RVE 등가 에너지법 / 등가 힘법 (Xia et al. 2012 절차, Table 1; 케이스별 국부 내력 가정은 §3.2 참조)
 
 - RVE = 한 주기($2c$) × 폭 $b$. 변형에너지 $U=\tfrac12\iint \mathbf N^T\mathbf S\mathbf N\,ds\,dy$ (Eq. 4), $\mathbf S=\mathbf K^{-1}$ (Eq. 5).
 - 등가 판 에너지 $\bar U=\tfrac12(2c)b\{\bar\varepsilon,\bar\kappa\}^T[\bar A,\bar D]\{\bar\varepsilon,\bar\kappa\}$ (Eq. 6)와 같다고 두고, 6개의 단위 일반화 변형률 경계조건 $\{1,0,0,0,0,0\}^T$ … $\{0,0,0,0,0,1\}^T$을 순서대로 부과한다.
@@ -292,13 +292,110 @@ $$c_1=\frac{\varepsilon\mathcal B(v_{3,11}+\nu v_{3,22})-(v_{1,1}+\nu v_{2,2})}{
 
 **Table 2 — 비대칭 지수-사인 단면** $\phi(X)=\eta[e^{\sin2\pi X}-\langle e^{\sin2\pi X}\rangle]$, $\eta=0.1$, $\varepsilon=1$ m, $h=0.005$ m: $B_{11}=204.26$ N, $B_{12}=40.85$ N, $B_{22}=794841$ N (VAPAS 225.98 / 42.64 / 817802). 비대칭 주름에서는 $B_{22}$가 무시할 수 없는 크기. 쉐브론 판 단면이 대칭(사인/원호)이면 해당 없음.
 
-### 2.8 Xia (2012) 식의 2차 문헌 전사 불일치 (Xia 원문 확보 필요 사유)
+### 2.8 Xia (2012) 식의 2차 문헌 전사 불일치 — **해결됨 (2026-09-08, §3.3 참조)**
 
-Ye Eq. (10)이 전사한 Xia의 $A_{22}=\nu^2A_{11}+\frac S\varepsilon Eh\left(\frac1{1-\nu^2}-\frac{1-\nu^2}{4(1+\nu)^2}\right)$는 $\nu=0.2$에서 괄호항이 0.875가 되어 Ye Table 1의 Xia 열($1.8708\times10^8$)을 재현하지 못한다($1.64\times10^8$). Lang & Su Eq. (7)의 전사 $\frac{\nu^2}{1-\nu^2}\frac{2cEh^3}{I_1h^2+12I_2}+\frac{lEh}{c}$는 정확히 재현한다. 또 Ye의 Xia $A_{11}=\frac{Eh^3}{12(1-\nu^2)}\frac{1}{\langle1/\sqrt a\rangle h^2/12+I_y/h}$는 Lang & Su 전사와 동치다. → **Xia 원문으로 $A_{22}$ 원식을 확정**해야 한다.
+Ye Eq. (10)이 전사한 Xia의 $A_{22}=\nu^2A_{11}+\frac S\varepsilon Eh\left(\frac1{1-\nu^2}-\frac{1-\nu^2}{4(1+\nu)^2}\right)$는 $\nu=0.2$에서 괄호항이 0.875가 되어 Ye Table 1의 Xia 열($1.8708\times10^8$)을 재현하지 못한다($1.64\times10^8$). Lang & Su Eq. (7)의 전사 $\frac{\nu^2}{1-\nu^2}\frac{2cEh^3}{I_1h^2+12I_2}+\frac{lEh}{c}$는 정확히 재현한다. 또 Ye의 Xia $A_{11}=\frac{Eh^3}{12(1-\nu^2)}\frac{1}{\langle1/\sqrt a\rangle h^2/12+I_y/h}$는 Lang & Su 전사와 동치다. → Xia 원문(§3.3 Table 2)으로 확인: **Lang & Su 전사가 원문과 일치하고 Ye Eq. (10)의 전사가 오류**다. 원식은 Ye 자신의 $A_{22}$와 동일하므로 Xia 면내 강성은 정확하다.
 
-## 3. 고전 등가 강성식 통합 비교표 (Ye 2014 §2.1 전사, Ye 기호)
+## 3. Xia, Friswell & Saavedra Flores (2012) — RVE 균질화 등가 직교이방성 모델
 
-Briassoulis·Samanta & Mukhopadhyay 원문 미확보 상태에서, Ye (2014)가 전사한 형태를 2차 출처로 기록한다. Samanta & Mukhopadhyay (1999)는 Easley (1969, 1975)의 식을 인용한 것으로 Ye는 "불완전·부정확"으로 분류하고 수식을 싣지 않았다(수치는 Lang & Su Table 6 참조).
+**서지사항**
+- Yi Xia, Michael I. Friswell (Swansea Univ.), Erick I. Saavedra Flores (Swansea Univ. / Univ. de Santiago de Chile)
+- *Equivalent models of corrugated panels*, Int. J. Solids Struct. 49(13) (2012) 1453–1462. DOI 10.1016/j.ijsolstr.2012.02.023
+- 원문 확보: 2026-09-08 (저작권 문서이므로 저장소에는 넣지 않음)
+- Lang & Su (2022)가 유도 절차를 그대로 차용한 모체 논문. 모핑 항공기 스킨용 주름 복합재 적층판이 동기이며, **원판이 직교이방성(복합재 적층)이어도 적용 가능**한 일반형으로 제시됨.
+
+### 3.1 좌표계·형상 (Fig. 1, Eq. 1–4)
+
+- 전역 $xyz$: $x$ = 파형 진행 방향(corrugation direction, 유연), $y$ = 능선 방향(transverse, 강), $z$ 법선. Lang & Su와 동일.
+- 국부 $(s,n,y)$: $s$ = $xz$ 평면 내 접선 방향(호 길이), $n$ = 법선. $\cos\theta=dx/ds,\ \sin\theta=dz/ds$.
+- 원판 직교이방성 주축이 $s, y$와 일치한다고 가정(그래야 강성행렬의 비대각 대부분이 0).
+- 형상 입력은 $c$(반주기), $l$(반주기 전개길이), $I_1=\int_0^{2l}(dx/ds)^2ds$, $I_2=\int_0^{2l}z^2ds$ 네 개뿐 — Eq. (19). Lang & Su §1.1과 동일 정의.
+- 등가 판은 연성 강성 $\mathbf B$를 무시한 직교이방성 Kirchhoff 판 — Eq. (5), (6).
+
+### 3.2 유도 절차 — 6개 일반화 변형률 경계조건과 국부 내력 가정 (§2.3)
+
+RVE(한 주기 $2c$ × 폭 $b$)에 Table 1의 단위 일반화 변형률을 하나씩 부과하고, 국부 내력 분포를 평형·대칭 논거로 가정한 뒤 (i) 등가 에너지법(대각항: $\bar A_{11}=2U/(2cb)$ 등) 또는 (ii) 등가 힘법(비대각항: 국부 내력의 주기 평균)으로 등가 강성을 정한다. **각 케이스의 국부 내력 가정이 곧 국부 응력 복원식**이 되므로 아래에 기록한다.
+
+| Case | 부과 변형률 | 국부 변형률 가정 | 국부 내력 분포 | 결과 |
+|---|---|---|---|---|
+| 1 | $\bar\epsilon_x=1$ | $\epsilon_y=\gamma_{sy}=\kappa_y=\kappa_{sy}=0$ | $N_s=\bar N_x\frac{dx}{ds}$ (Eq. 11), $N_y=\frac{A_{12}}{A_{11}}N_s$ (12), $M_s=\bar N_x z$ (13), $M_y=\frac{D_{12}}{D_{11}}M_s$ (14) | $\bar A_{11}=\dfrac{2c}{I_1/A_{11}+I_2/D_{11}}$ (21), $\bar A_{12}=\dfrac{A_{12}}{A_{11}}\bar A_{11}$ (23) |
+| 2 | $\bar\epsilon_y=1$ | $\gamma_{sy}=\kappa_y=\kappa_{sy}=0$ | $N_s=\bar A_{12}\frac{dx}{ds}$ (24), $\epsilon_s=\frac{1}{A_{11}}(\bar A_{12}\frac{dx}{ds}-A_{12})$ (25), $N_y=\frac{A_{12}\bar A_{12}}{A_{11}}\frac{dx}{ds}+\frac{A_{11}A_{22}-A_{12}^2}{A_{11}}$ (26) | $\bar A_{22}=\dfrac{A_{12}}{A_{11}}\bar A_{12}+\dfrac lc\dfrac{A_{11}A_{22}-A_{12}^2}{A_{11}}$ (28) |
+| 3 | $\bar\gamma_{xy}=1$ | – | $N_{sy}=\bar N_{xy}=\bar A_{66}$ 일정 | $\bar A_{66}=\dfrac cl A_{66}$ (31) |
+| 4 | $\bar\kappa_x=1$ | $\epsilon_s=\epsilon_y=\gamma_{sy}=\kappa_y=\kappa_{sy}=0$ | $M_s=\bar M_x$ (32), $M_y=\frac{D_{12}}{D_{11}}M_s$ (33) | $\bar D_{11}=\dfrac cl D_{11}$ (36), $\bar D_{12}=\dfrac{D_{12}}{D_{11}}\bar D_{11}$ (37) |
+| 5 | $\bar\kappa_y=1$ | $\epsilon_s=0,\ \epsilon_y=z,\ \gamma_{sy}=0,\ \kappa_s=0,\ \kappa_y=\frac{dx}{ds},\ \kappa_{sy}=0$ | $N_y=A_{22}z$, $M_y=D_{22}\frac{dx}{ds}$ | $\bar D_{22}=\dfrac{1}{2c}[A_{22}I_2+D_{22}I_1]$ (40) |
+| 6 | $\bar\kappa_{xy}=1$ | $\kappa_{sy}=1$, 나머지 0 | $M_{sy}=D_{66}$ 일정 | $\bar D_{66}=\dfrac lc D_{66}$ (43) |
+
+- Case 1의 에너지 적분에서 $S_{11}+2\frac{A_{12}}{A_{11}}S_{12}+\frac{A_{12}^2}{A_{11}^2}S_{22}=\frac1{A_{11}}$, 굽힘도 동형으로 $\frac1{D_{11}}$ (Eq. 16, 17) → $U=\frac12 b\bar A_{11}^2\left[\frac{I_1}{A_{11}}+\frac{I_2}{D_{11}}\right]$ (18).
+- **등가 판의 Poisson 비는 원판과 동일** ($\bar A_{12}/\bar A_{11}=A_{12}/A_{11}$, $\bar D_{12}/\bar D_{11}=D_{12}/D_{11}$).
+- Lang & Su는 이 절차에서 원판 강성 $A_{11},A_{12},A_{22},D_{22}$만 $\tilde A_{11}=Eh,\ \tilde A_{12}=\nu Eh,\ \tilde A_{22}=Eh,\ \tilde D_{22}=Eh^3/12$로 바꿔 넣은 것이다(§1.4). Case 5의 $\epsilon_y=z$ 가정에서 $\sigma_s$가 생기지 않는다고 보면 $A_{22}\to Eh$가 되어 $D_{22}$의 $1/(1-\nu^2)$가 사라진다.
+
+### 3.3 일반식 — Table 2 (임의 단면, 임의 직교이방성 원판)
+
+| 성분 | Xia et al. (2012) | 등방성 원판 대입 ($A_{11}=\frac{Eh}{1-\nu^2}$ 등) |
+|---|---|---|
+| $\bar A_{11}$ | $\dfrac{2c}{I_1/A_{11}+I_2/D_{11}}$ | $\dfrac1{1-\nu^2}\dfrac{2cEh^3}{I_1h^2+12I_2}$ |
+| $\bar A_{12}$ | $\dfrac{A_{12}}{A_{11}}\bar A_{11}$ | $\nu\bar A_{11}$ |
+| $\bar A_{22}$ | $\dfrac{A_{12}}{A_{11}}\bar A_{12}+\dfrac lc\dfrac{A_{11}A_{22}-A_{12}^2}{A_{11}}$ | $\nu^2\bar A_{11}+\dfrac{lEh}{c}$ |
+| $\bar A_{66}$ | $\dfrac cl A_{66}$ | $\dfrac{cEh}{2l(1+\nu)}$ |
+| $\bar D_{11}$ | $\dfrac cl D_{11}$ | $\dfrac1{1-\nu^2}\dfrac{cEh^3}{12l}$ |
+| $\bar D_{12}$ | $\dfrac{D_{12}}{D_{11}}\bar D_{11}$ | $\nu\bar D_{11}$ |
+| $\bar D_{22}$ | $\dfrac1{2c}[I_2A_{22}+I_1D_{22}]$ | $\dfrac1{1-\nu^2}\dfrac{12I_2Eh+I_1Eh^3}{24c}$ |
+| $\bar D_{66}$ | $\dfrac lc D_{66}$ | $\dfrac{lEh^3}{24c(1+\nu)}$ |
+
+**§2.8의 의문 해소**: 원문 Table 2의 $\bar A_{22}$는 Lang & Su Eq. (7) 전사 $\frac{\nu^2}{1-\nu^2}\frac{2cEh^3}{I_1h^2+12I_2}+\frac{lEh}{c}$와 정확히 일치한다. Ye (2014) Eq. (10)의 전사 $\nu^2A_{11}+\frac S\varepsilon Eh\left(\frac1{1-\nu^2}-\frac{1-\nu^2}{4(1+\nu)^2}\right)$는 **오류**다(사다리꼴 예제에서 $1.556\times10^8$ vs 원문 $1.613\times10^8$, −3.6%). Ye의 "A22 is approximately correct" 판정은 이 잘못된 전사에 근거했으나, 원식 $\nu^2\bar A_{11}+lEh/c$는 Ye 자신의 $Eh\langle\sqrt a\rangle+\nu^2A_{11}$과 **동일**하므로 결론(정확)은 그대로다.
+
+### 3.4 단면별 폐형식 — Table 3, 4
+
+**사다리꼴** (경사각 $\alpha$, Table 3): $l=\frac{2f}{\sin\alpha}+c-\frac{2f}{\tan\alpha}$, $I_1=\frac{4f\cos^2\alpha}{\sin\alpha}+2c-\frac{4f}{\tan\alpha}$, $I_2=\frac{4f^3}{3\sin\alpha}+2f^2\left(c-\frac{2f}{\tan\alpha}\right)$ (Lang & Su Eq. 15와 동일).
+
+**원호(round) 주름** (Table 4; 반원 반경 $R$ + 수직 직선 $L$, 반주기 폭 $c=2R$, $l=\pi R+2L$): $I_1=\pi R$, $I_2=\frac{4L^3}{3}+2\pi L^2R+8LR^2+\pi R^3$. → `calc/verify_xia_tables.py`에서 수치적분과 일치 확인. **SPHX 전열판 단면(원호+직선)에 가장 가까운 폐형식**이므로 계산 시트의 기본 단면형 후보.
+
+Table 3·4에 병기된 기존 식 (Xia의 전사):
+
+| 성분 | Samanta & Mukhopadhyay (1999), 등방 $E,\nu,t$ | Yokozeki et al. (2006), 원호 주름 |
+|---|---|---|
+| $\bar A_{11}$ | $\dfrac{2c}{I_2}\dfrac{Et^3}{12}$ | $\dfrac{4RD_{11}}{I_2}$ |
+| $\bar A_{12}$ | $\nu\bar A_{11}$ | – |
+| $\bar A_{22}$ | $\dfrac lc Et$ | $\dfrac{l}{2R}A_{22}$ |
+| $\bar A_{66}$ | $\dfrac cl\dfrac{Et}{2(1+\nu)}$ | – |
+| $\bar D_{11}$ | $\dfrac cl\dfrac{Et^3}{12}$ | $\dfrac{2R}{l}D_{11}$ |
+| $\bar D_{12}$ | $0$ | – |
+| $\bar D_{22}$ | $\dfrac{Et}{2c}I_2$ | $\left[I_2+\dfrac{(3\pi R+8L)}{12}t^2\right]\dfrac{A_{22}}{4R}$ |
+| $\bar D_{66}$ | $\dfrac lc\dfrac{Et^3}{6(1+\nu)}$ | – |
+
+> **주의 — S&M 열의 계수 불일치**: Table 3에 인쇄된 S&M 수식을 사다리꼴 예제에 대입하면 Table 5의 S&M 수치와 $\bar A_{11},\bar A_{12},\bar A_{22}$는 $(1-\nu^2)$배(=0.91), $\bar D_{22}$는 0.5배, $\bar D_{66}$은 4배 차이가 난다(`verify_xia_tables.py`). Table 5 수치는 $\bar A_{11}=\frac{2c}{I_2}\frac{Et^3}{12(1-\nu^2)}$, $\bar A_{22}=\frac lc\frac{Et}{1-\nu^2}$, $\bar D_{22}=\frac{Et}{c}I_2$, $\bar D_{66}=\frac lc\frac{Et^3}{24(1+\nu)}$에 해당한다. S&M 원문의 변형률·곡률 정의(공학 전단, $I_2$ 적분 구간) 차이로 추정되며, Lang & Su Table 6의 S&M 열은 Xia Table 5 수치를 그대로 옮긴 것이다. S&M 원문 확인 전까지는 **Table 5 수치 기준 형태**를 쓴다.
+
+### 3.5 검증
+
+**Table 5 — 사다리꼴** ($E=21$ GPa, $\nu=0.3$, $c=0.0508$ m, $f=0.0127$ m, $t=0.00635$ m, $\alpha=45°$, $b=1.016$ m). FEM = ANSYS SHELL63 단위셀(4131 노드, 4000 요소)에 Table 1의 일반화 변형률 경계조건을 부과하고 경계 반력·모멘트로 등가 강성 산출.
+
+| 성분 | Xia | S&M | 단위셀 FEM | Xia vs FEM |
+|---|---|---|---|---|
+| $\bar A_{11}$ (MN/m) | 4.052 | 4.150 | 4.051 | 0.01% |
+| $\bar A_{12}$ (MN/m) | 1.216 | 1.245 | 1.215 | 0.01% |
+| $\bar A_{22}$ (MN/m) | 161.332 | 176.888 | 163.910 | −1.57% |
+| $\bar A_{66}$ (MN/m) | 42.489 | 42.489 | 42.797 | −0.72% |
+| $\bar D_{11}$ (N·m) | 407.917 | 371.205 | 406.512 | 0.35% |
+| $\bar D_{12}$ (N·m) | 122.375 | 0 | 121.954 | 0.35% |
+| $\bar D_{22}$ (kN·m) | 17.809 | 31.647 | 17.805 | 0.02% |
+| $\bar D_{66}$ (N·m) | 208.032 | 208.032 | 207.96 | 0.04% |
+
+- **중요한 해석**: 단위셀 FEM은 Xia와 같은 Dirichlet 경계조건을 쓰므로 $\bar D_{22}$가 Xia 식(17.809)과 일치한다. 즉 단위셀 검증은 Xia $\bar D_{22}$의 "상한" 성격을 드러내지 못한다. 전체 판 해석(Lang & Su Table 7: Xia 모델 처짐 −4~−14% 과소)과 VAM(Ye: 16.2 kN·m)이 이를 드러낸다. → 본 프로젝트 D단계 상세 FE 검증은 **단위셀 + 전체 판** 두 수준으로 해야 한다.
+- Fig. 3, 4: Case 1·5의 국부 내력 $N_s, N_y, M_s, M_y$ 분포가 FEM과 매우 근접 → §3.2의 국부 내력 가정이 타당함을 뜻하며, 이는 국부 응력 추정에 그대로 쓸 수 있다.
+- 10주기 사다리꼴 판(1.016 m × 1.016 m, 4변 고정, 69 kN/m², SHELL63 71,120 요소) vs 등가판: 처짐 근접, 상세모델이 약간 강함(파형 방향 고정단의 국부 보강 효과를 등가판이 못 잡음 — Fig. 6).
+
+**Table 7 — 원호 주름 복합재** (AS4/3501-6 $[0/90]_s$, $E_1=148$, $E_2=10.5$, $G_{12}=5.61$ GPa, $\nu_{12}=0.3$; $R=L=3$ mm, $b=15$ mm; SHELL181 1344 요소): Xia vs FEM 오차 $\bar A_{11}$ 0.12%, $\bar A_{22}$ 0.00%, $\bar A_{66}$ 0.78%, $\bar D_{11}$ 0.29%, $\bar D_{22}$ 0.02%, $\bar D_{66}$ 0.02%. Yokozeki 식과도 근접. Fig. 7, 8: $w=4R$, $L$ 변화에 따른 8개 강성의 파라메트릭 곡선(1~5 mm).
+
+### 3.6 본 프로젝트 관점의 시사점
+
+1. **원판 직교이방성 허용**: 압연 방향 이방성이나 클래드 판을 쓰는 경우에도 원판 $A_{ij}, D_{ij}$만 바꿔 넣으면 된다. 계산 모듈 입력을 등방 $E,\nu,t$가 아니라 원판 ABD로 받도록 설계하면 확장성이 생긴다.
+2. **국부 응력 1차 추정식**: Case 1 가정 $N_s=\bar N_x\cos\theta,\ M_s=\bar N_x z$에서 파형 진행 방향 인장 $\bar N_x$에 대한 원판 표면 응력은 $\sigma_s=\frac{\bar N_x\cos\theta}{t}\pm\frac{6\bar N_x z}{t^2}$, 최대는 $|z|=f$인 산·골에서 $\approx\bar N_x(\frac{1}{t}+\frac{6f}{t^2})$. Case 5 가정에서 능선 방향 굽힘 $\bar M_y$에 대해 $N_y=A_{22}z\bar\kappa_y,\ M_y=D_{22}\frac{dx}{ds}\bar\kappa_y$, $\bar\kappa_y=\bar M_y/\bar D_{22}$. Ye §2.6 복원식과 상호 검증할 것.
+3. **원호 주름 폐형식**(Table 4)이 SPHX 단면에 가장 가깝다. 실제 판 단면(원호+직선 또는 사인)에 맞춰 $l, I_1, I_2$만 바꾸면 되므로 계산 시트에 단면 라이브러리(사인/사다리꼴/원호-직선/원호-접선)를 두고 선택하게 한다.
+4. **검증 전략**: 단위셀 FE(Dirichlet BC)는 Xia식과 일치할 뿐 정확도를 판정하지 못한다. 전체 판 굽힘 해석과 비교해야 $\bar D_{22}$ 오차가 드러난다.
+
+## 4. 고전 등가 강성식 통합 비교표 (Ye 2014 §2.1 전사, Ye 기호)
+
+Briassoulis·Samanta & Mukhopadhyay 원문 미확보 상태에서, Ye (2014)가 전사한 형태를 2차 출처로 기록한다. Samanta & Mukhopadhyay (1999) 수식은 Xia (2012) Table 3 전사로 §3.4에 별도 기록했다(Ye는 Easley 인용식이라 "불완전·부정확"으로 분류).
 
 | 성분 | Seydel (1931) Eq. (5) / 통용식 Eq. (8) | Briassoulis (1986) Eq. (6), (9) [사인형 가정] | Xia et al. (2012) Eq. (7), (10) | Ye (2014) 얇은판·대칭 Eq. (29) |
 |---|---|---|---|---|
@@ -324,7 +421,7 @@ Briassoulis·Samanta & Mukhopadhyay 원문 미확보 상태에서, Ye (2014)가 
 
 **채택 권고 (2026-09-08 기준)**: 굽힘 $D_{11},D_{12},D_{22},D_{66}$ 및 면내 $A_{11},A_{12},A_{66}$은 Ye (2014) Eq. (19) 또는 그 얇은판 극한 Eq. (29)(= Lang & Su)로 계산. $A_{22}$는 Ye Eq. (19) $Eh\langle\sqrt a\rangle+\nu^2A_{11}$ 사용(Lang & Su의 $(1-\nu^2)$ 계수 제외). 필요 형상 입력은 $\langle\sqrt a\rangle,\langle1/\sqrt a\rangle,\langle\phi^2\sqrt a\rangle$ 세 적분(= $l, I_1, I_2$)이며, 정밀 $A_{11}, D_{66}$에는 $\langle\varphi\mathcal A\rangle, \alpha_1$ 추가.
 
-## 4. 관련 문헌
+## 5. 관련 문헌
 
 Lang & Su (2022) 서론에서 정리한 계보와 본 프로젝트에 필요한 확인 사항. 원문 확보 여부를 표시한다.
 
@@ -332,18 +429,19 @@ Lang & Su (2022) 서론에서 정리한 계보와 본 프로젝트에 필요한 
 |---|---|---|---|
 | 고전 | Huber (1923), Seydel (1931), Timoshenko & Woinowsky-Krieger (1959) | 최초 등가 강성식, 사인/사다리꼴 굽힘·비틀림 강성 | 미확보 — Seydel 굽힘식·1960년대 면내식은 Ye (2014) Eq. (5), (8)로 확보 (§3) |
 | 일방향 주름판 등가 강성 | Briassoulis (1986), *Equivalent orthotropic properties of corrugated sheets*, Comput. Struct. 23(2) 129–138 | 사인형 주름의 면내·굽힘 등가 강성 고전식. Table 5에서 $\bar A_{11}$ −17%, $\bar D_{22}$ −11%, $\bar D_{66}$ +60% 편차 | 미확보 — 수식은 Ye (2014) Eq. (6), (9)로 확보 (§3). $D_{66}$ 2배 관례 차이는 원문 확인 필요 |
-| 일방향 주름판 등가 강성 | Samanta & Mukhopadhyay (1999), Eng. Struct. 21(3) 277–287 | 사다리꼴 주름의 인장+굽힘 강성(Easley 1969/1975 인용). Table 6에서 $\bar D_{22}$ +95%, $\bar D_{12}=0$ | 미확보 (수치는 Table 6으로 확보). Ye는 '불완전·부정확'으로 분류 — 우선순위 낮음 |
-| RVE 균질화 | **Xia, Friswell, Saavedra Flores (2012)**, *Equivalent models of corrugated panels*, IJSS 49(13) 1453–1462 | 임의 단면 일반식(Eq. 7), 유도 절차 §2.3. 면내 강성의 기준식 | 미확보 — **우선 확보 필요**. 2026-09-08 업로드 파일은 Lang & Su PDF의 중복본이었음. $A_{22}$ 원식 확정 필요 (§2.8) |
+| 일방향 주름판 등가 강성 | Samanta & Mukhopadhyay (1999), Eng. Struct. 21(3) 277–287 | 사다리꼴 주름의 인장+굽힘 강성(Easley 1969/1975 인용). Table 6에서 $\bar D_{22}$ +95%, $\bar D_{12}=0$ | 미확보 — 수식은 Xia (2012) Table 3 전사로 확보 (§3.4). 인쇄 수식과 수치 사이 계수 불일치 있음 → 원문 확인은 우선순위 낮음 |
+| RVE 균질화 | **Xia, Friswell, Saavedra Flores (2012)**, *Equivalent models of corrugated panels*, IJSS 49(13) 1453–1462 | 임의 단면 일반식(Eq. 7), 유도 절차 §2.3. 면내 강성의 기준식 | **확보 (2026-09-08)** — §3에 전사·검증 완료. $A_{22}$ 원식 확정, 직교이방성 원판 일반형, 원호 주름 폐형식 확보 |
 | VAM 균질화 | **Ye, Berdichevsky, Yu (2014)**, *An equivalent classical plate model of corrugated structures*, IJSS 51 2073–2083 | 얕은/깊은 주름 모두 유효한 완전식, 연성 강성 $B$ 최초 제시. 현재 "가장 타당한" 식으로 평가됨 | **확보 (2026-09-08)** — §2에 전사·검증 완료. 국부 변형률 복원식 포함 |
 | 차원축소 | Kolpakov & Kolpakov (2018 arXiv:1811.01718; 2020 IJES 154 103327) | 곡선보 문제로 축소한 최단순 형태, 임의 파형(비대칭 포함) 확장 | 미확보 (arXiv는 공개) |
 | MSG | Deo & Yu (2021), IJSS 208–209 262–271 (MSG-TW) | 사다리꼴 기준값(Table 6) 출처 | 미확보 |
 | 등가판 검증 | Aoki & Maysenhölder (2017), IJSS 108 11–23 | 사인/사다리꼴 자유판 고유진동수 실험·FE, 등가판 모델 고차 모드 한계 | 미확보 |
 | 원호 주름 해석해 | Kress & Winkler (2010, 2011), Compos. Struct. 92, 93 | 원호 단면 주름의 해석적 하중응답 — SPHX 사인/원호 단면과 관련 | 미확보 |
+| 원호 주름 등가식 | Yokozeki et al. (2006), Composites A 37 1578–1586 | 원호+직선 주름 복합재의 등가 강성 실험·해석 | 미확보 — 수식은 Xia (2012) Table 4 전사로 확보 (§3.4) |
 | 쉐브론 판 (열교환기) | 판형 열교환기 쉐브론 판의 구조 강성/좌굴 연구 | 쉐브론 각도의 영향, 교차 적층 접촉점 거동 | 문헌 탐색 필요 |
 | 응력 평가 | 주름판 응력집중/국부 굽힘 연구 | 등가 공칭응력 → 실제 최대응력 환산 계수 | 문헌 탐색 필요 |
 
-## 5. 정리 방향
+## 6. 정리 방향
 
-1. 일방향 주름판의 등가 직교이방성 강성식은 §1.5(Lang & Su 기호)와 §3(Ye 기호) 통합표로 정리 완료. 채택식은 §3 말미의 권고를 따른다. Xia 원문으로 $A_{22}$ 원식을 확정하는 일만 남음.
+1. 일방향 주름판의 등가 직교이방성 강성식은 §1.5(Lang & Su 기호), §3.3(Xia 일반형), §4(Ye 기호 통합표)로 정리 완료. 채택식은 §4 말미의 권고를 따른다. 3대 기준 문헌(Lang & Su, Ye, Xia) 원문 모두 확보·전사·수치검증됨.
 2. 쉐브론 판은 "능선 방향이 $\pm\beta$로 교차하는 두 영역"으로 보고, 각 영역의 등가 강성을 판 좌표계로 변환한 뒤 조합하는 방식과, 쉐브론 단위 셀을 직접 균질화하는 방식을 비교한다.
-3. 응력 환산은 Ye (2014) §2.6의 국부 변형률 복원식을 1차 수단으로 삼고, 단일 판 상세 FE는 복원식 검증 및 쉐브론 꺾임부 보정계수 산정에 사용한다.
+3. 응력 환산은 Ye (2014) §2.6의 국부 변형률 복원식과 Xia (2012) §3.2의 케이스별 국부 내력 가정을 1차 수단으로 삼고(둘을 상호 검증), 단일 판 상세 FE는 복원식 검증 및 쉐브론 꺾임부 보정계수 산정에 사용한다. 상세 FE 검증은 단위셀(Dirichlet BC)과 전체 판 두 수준으로 한다(§3.5).

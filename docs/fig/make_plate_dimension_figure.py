@@ -1,6 +1,6 @@
 """쉐브론 전열판 치수 정의 그림 생성 (docs/fig/plate_dimensions.png / .svg).
 
-패널 (a) 평면도, (b) 능선 직각 단면 A-A, (c) 좌표계·쉐브론 각 정의, (d) 적층 단면.
+패널 (a) 평면도, (b) 능선 직각 단면 A-A, (c) 좌표계·쉐브론 각 정의, (d) 적층 단면, (e) 테두리·apex 상세.
 기호 설명(한글)은 docs/04_plate_dimension_form.md 참조.
 """
 import numpy as np
@@ -259,11 +259,75 @@ def panel_stack(ax):
     ax.set_title("(d) Stack section (schematic)  —  plate pitch and channel gap", loc="left", fontsize=12, fontweight="bold")
 
 
+# ----------------------------------------------------------------------------- (e) edge / apex details
+def panel_edge(ax):
+    # ---- (e1) rim section: paired plates n (top) / n+1 (bottom) form one channel; rims meet and are welded at the edge
+    H, t, lam = 1.0, 0.12, 1.5
+    xr1, xr2, xr3 = 3.0, 4.2, 5.8                     # end of full corrugation | end of run-out | plate edge
+    zmid = (H + t) / 2 + 0.15                          # corrugation mid-plane height of plate n above channel centre
+    zrim = t / 2 + 0.02                                # rim plane (rims touch at the weld)
+    def profile(x):
+        amp = np.where(x < xr1, 1.0, np.where(x < xr2, 0.5 * (1 + np.cos(np.pi * (x - xr1) / (xr2 - xr1))), 0.0))
+        drop = np.where(x < xr1, 0.0, np.where(x < xr2, 0.5 * (1 - np.cos(np.pi * (x - xr1) / (xr2 - xr1))), 1.0))
+        return zmid + H / 2 * np.sin(2 * np.pi * x / lam) * amp - (zmid - zrim) * drop
+    x = np.linspace(0.0, xr3, 700)
+    for sgn, col in ((+1, "#d6e4f0"), (-1, "#f9e0d9")):
+        z = sgn * profile(x)
+        xo, zo = offset_curve(x, z, t / 2); xi, zi = offset_curve(x, z, -t / 2)
+        ax.fill(np.concatenate([xo, xi[::-1]]), np.concatenate([zo, zi[::-1]]), color=col, ec="k", lw=1.0)
+    ax.text(0.1, zmid + H / 2 + 0.28, "plate $n$", fontsize=9.5, color=BLUE)
+    ax.text(0.1, -zmid - H / 2 - 0.28, "plate $n+1$", fontsize=9.5, color=RED, va="top")
+    ax.add_patch(Circle((xr3 + 0.05, 0.0), 0.17, fc="#555555", ec="k", lw=0.8))
+    ax.text(xr3 + 0.3, -0.55, "periphery weld\n(or gasket)", fontsize=9, va="top")
+    ax.plot([-0.4, xr3 + 0.3], [0, 0], color=GREY, lw=0.6, ls=":")
+    ax.text(-0.45, 0.0, "channel\ncentre", fontsize=8, color=GREY, ha="right", va="center")
+    ytop = zmid + H / 2 + 0.75
+    dim_h(ax, xr1, xr2, ytop, r"$w_{ro}$", off=0.04, fs=11)
+    dim_h(ax, xr2, xr3, ytop, r"$b_m$", off=0.04, fs=11)
+    ax.text((xr1 + xr2) / 2, ytop + 0.42, "run-out", ha="center", fontsize=9, color=RED)
+    ax.text((xr2 + xr3) / 2, ytop + 0.42, "flat rim", ha="center", fontsize=9, color=RED)
+    for xx in (xr1, xr2, xr3):
+        ax.plot([xx, xx], [zrim + t, ytop], color=RED, lw=0.6, ls=":")
+    dim_v(ax, xr3 + 1.15, zrim, zmid, r"$h_{rim}$", off=0.08, fs=11)
+    ax.plot([xr1, xr3 + 1.15], [zmid, zmid], color=RED, lw=0.6, ls=":"); ax.plot([xr3, xr3 + 1.15], [zrim, zrim], color=RED, lw=0.6, ls=":")
+    ax.text(xr3 + 1.15, zmid + 0.25, "rim offset from\ncorrugation mid-plane", fontsize=8.5, color=RED, va="bottom")
+    # ---- (e2) apex detail (plan-view zoom): continuous vs half-pitch offset ridges
+    bx, w, h, y0 = 10.2, 3.6, 2.6, -1.1
+    beta = np.radians(60); cot = 1 / np.tan(beta)
+    for j, (title, shift) in enumerate((("continuous: crest meets crest", 0.0), ("offset: crest meets valley", 0.25))):
+        x0 = bx + j * 4.6; xa = x0 + w / 2
+        ax.add_patch(Polygon([[x0, y0], [x0 + w, y0], [x0 + w, y0 + h], [x0, y0 + h]], closed=True, fc="#f4f6f7", ec="k", lw=1.2))
+        xs = np.linspace(x0, x0 + w, 300)
+        for k in np.arange(-3.0, 3.5, 0.5):
+            for phase, ls in ((0.0, "-"), (0.25, "--")):
+                kk = y0 + 1.3 + k + phase
+                ys_l = kk + (xa - xs) * cot
+                ys_r = kk + shift + (xs - xa) * cot
+                yl = np.where((xs <= xa) & (ys_l >= y0) & (ys_l <= y0 + h), ys_l, np.nan)
+                yr = np.where((xs >= xa) & (ys_r >= y0) & (ys_r <= y0 + h), ys_r, np.nan)
+                ax.plot(xs, yl, color=BLUE, lw=1.0, ls=ls); ax.plot(xs, yr, color=BLUE, lw=1.0, ls=ls)
+        ax.plot([xa, xa], [y0, y0 + h], color=GREY, ls="-.", lw=0.9)
+        ax.text(x0 + w / 2, y0 + h + 0.12, title, ha="center", fontsize=10, color=BLUE)
+    ax.plot([], [], color=BLUE, ls="-", label="crest line"); ax.plot([], [], color=BLUE, ls="--", label="valley line")
+    ax.legend(loc="upper right", bbox_to_anchor=(0.995, 1.0), fontsize=9, frameon=False, ncol=2)
+    xa0 = bx + w / 2
+    ax.annotate("", (xa0 + 0.3, y0 - 0.22), (xa0 - 0.3, y0 - 0.22), arrowprops=dict(arrowstyle="<->", color=RED, lw=1.1, shrinkA=0, shrinkB=0))
+    ax.plot([xa0 - 0.3, xa0 - 0.3], [y0, y0 - 0.22], color=RED, lw=0.6, ls=":"); ax.plot([xa0 + 0.3, xa0 + 0.3], [y0, y0 - 0.22], color=RED, lw=0.6, ls=":")
+    ax.text(xa0, y0 - 0.32, r"$w_{apex}$ (flat band, if any) or $r_{apex}$ (kink fillet radius)", ha="center", va="top", fontsize=9, color=RED)
+    # captions
+    ax.text(0.0, -2.35, "(e1) Rim: corrugation depth tapers to zero over the run-out width $w_{ro}$, then a flat rim of width $b_m$ offset by $h_{rim}$ meets the paired plate and is welded (or gasketed).  "
+                        "Give the same items for the port rim ($b_{port}$, $h_{port}$).", fontsize=9, color=GREY)
+    ax.text(0.0, -2.62, "(e2) Apex: state whether crest lines run continuously across the apex line or are offset by half a pitch, and the kink geometry ($r_{apex}$ or $w_{apex}$).  "
+                        "For a W pattern give the number and spacing of apex lines.", fontsize=9, color=GREY)
+    ax.set_xlim(-1.4, 19.2); ax.set_ylim(-2.85, 2.75); ax.set_aspect("equal"); ax.axis("off")
+    ax.set_title("(e) Edge (rim) and apex details", loc="left", fontsize=12, fontweight="bold")
+
+
 if __name__ == "__main__":
-    fig = plt.figure(figsize=(17, 20))
-    gs = fig.add_gridspec(3, 2, width_ratios=[1, 1.3], height_ratios=[1.25, 1.0, 0.85])
+    fig = plt.figure(figsize=(17, 25))
+    gs = fig.add_gridspec(4, 2, width_ratios=[1, 1.3], height_ratios=[1.25, 1.0, 0.85, 0.75])
     panel_plan(fig.add_subplot(gs[0, 0])); panel_section(fig.add_subplot(gs[0, 1]))
-    panel_axes(fig.add_subplot(gs[1, :])); panel_stack(fig.add_subplot(gs[2, :]))
+    panel_axes(fig.add_subplot(gs[1, :])); panel_stack(fig.add_subplot(gs[2, :])); panel_edge(fig.add_subplot(gs[3, :]))
     fig.suptitle("SPHX chevron plate — dimension definition sheet  (fill values in docs/04_plate_dimension_form.md)", fontsize=14, fontweight="bold", y=0.995)
     fig.tight_layout(rect=(0, 0, 1, 0.975))
     fig.savefig("/home/user/SPHX_EQV/docs/fig/plate_dimensions.png", dpi=150)

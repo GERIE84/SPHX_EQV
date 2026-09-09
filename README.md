@@ -29,7 +29,7 @@ docs/
   05_geometry_parameters.md   형상 파라미터 정의서 (기호·측정기준·파생량·유효범위)
   06_equivalent_stiffness.md  등가 강성 수식 정리 및 채택식 (국부축, 모델 비교, 수치 예)
   fig/                    그림 및 생성 스크립트
-calc/                     계산 모듈: geometry.py(단면 라이브러리), stiffness.py(등가 강성 5모델·채택식), plate_input_template.yaml(입력 템플릿),
+calc/                     계산 모듈: geometry.py(단면 라이브러리), stiffness.py(등가 강성 5모델·채택식), stress_recovery.py(능선 응력 복원), plate_input_template.yaml(입력 템플릿),
                           verify_{langsu,ye,xia,briassoulis}_tables.py(문헌 수치 재현 검증)
 fea/                      (예정) 등가 물성치 FE 검증 모델
 ```

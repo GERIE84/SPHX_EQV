@@ -19,8 +19,9 @@
   - [x] 치수 정의 그림 및 입력 양식 작성 (2026-09-08, `docs/04_plate_dimension_form.md`, `docs/fig/plate_dimensions.png`)
   - [x] 단면 라이브러리 `calc/geometry.py` (사인형/원호+접선/사다리꼴/원호, 파생량 $c,l,I_1,I_2$, 문헌값 자체검증) 및 입력 템플릿 `calc/plate_input_template.yaml`
   - [ ] 실제 판 치수·재질·설계조건 값 수령 → 템플릿 기입 (그 전까지 05 §5 가정값 사용)
-- [ ] 주름 방향/직각 방향 등가 면내 강성(E_x, E_y, G_xy, ν_xy) 및 굽힘 강성(D_x, D_y, D_xy) 수식 정리
-- [ ] 쉐브론 각도 β에 대한 좌표 변환 및 조합식 정리
+- [x] 주름 방향/직각 방향 등가 면내 강성(E_x, E_y, G_xy, ν_xy) 및 굽힘 강성(D_x, D_y, D_xy) 수식 정리 — 2026-09-09 `docs/06_equivalent_stiffness.md`, `calc/stiffness.py` (채택식 확정: Ye Eq. 19 기반, 문헌 표·평판 극한 검증)
+  - [ ] 비대칭 단면($R_c\ne R_v$) 확인 시 연성 강성 $B_{ij}$ 구현 (06 §6)
+- [ ] 쉐브론 각도 β에 대한 좌표 변환 및 조합식 정리 (→ `docs/07_stiffness_transformation.md`)
 - [ ] 등가 두께 정의(면내 기준/굽힘 기준) 및 응력 환산 계수 개념 정리
   - [ ] Ye (2014) 국부 변형률 복원식(Eq. 14–17, 20)을 이용한 수식 기반 최대응력 산정 절차 정리 (`02_literature.md` §2.6)
 

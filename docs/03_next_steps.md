@@ -24,12 +24,14 @@
   - [ ] 비대칭 단면($R_c\ne R_v$) 확인 시 연성 강성 $B_{ij}$ 구현 (06 §6)
 - [x] 쉐브론 각도 β에 대한 좌표 변환 및 조합식 정리 — 2026-09-09 `docs/07_stiffness_transformation.md`, `calc/transform.py` (회전식 검증, zone-wise/Strip/Voigt/Reuss 조합 규칙, 채택: FE는 zone-wise, 수식은 겉보기 강성 + Strip/zone 범위)
   - [ ] 비대칭 단면 시 6×6 (A,B,D) 회전으로 확장
-- [ ] 등가 두께 정의(면내 기준/굽힘 기준) 및 응력 환산 계수 개념 정리
+- [x] 등가 두께 정의(면내 기준/굽힘 기준) 및 응력 환산 계수 개념 정리 — 2026-09-09 `docs/09_equivalent_thickness.md`, `calc/equivalent_plate.py` ($t_b=\sqrt{12D_{11}/A_{11}}$=3.73 mm, $t_s=h\lambda$=0.76 mm; 균질 단일층 불가 → FE 입력은 ANSYS preintegrated general shell section(GENS) 채택, APDL 생성기 포함)
   - [x] Briassoulis (1986) 능선 응력집중식(B1–B7) 구현 — `calc/stress_recovery.py` (2026-09-09)
   - [x] 방법론 검토: RVE vs VAM, FEA 필요 범위 — `docs/08_method_review_rve_vs_vam.md` (2026-09-09). 결정: 응력 복원 1차 수단 = VAM 복원식(Ye Eq. 14–17, 20); Briassoulis·Xia Case 1은 교차검증용; Xia Case 5 가정 폐기
-  - [ ] `stress_recovery.ye_recovery()` 구현 — 6개 거시 변형률 → 단면 위치별 국부 막·굽힘 변형률·응력
-  - [ ] 구현 검증: 평판 극한, Case 1·5 특수해(08 §4), 단위셀 변형에너지 일치, Briassoulis Fig. 6 경향
-  - [ ] $t/R_{min}>0.2$ 시 보정 방침 (솔리드 FE 대조)–17, 20)을 이용한 수식 기반 최대응력 산정 절차 정리 (`02_literature.md` §2.6)
+  - [x] `stress_recovery.ye_recovery()` 구현 — 6개 거시 변형률 → 단면 위치별 국부 막·굽힘 변형률·응력·합력, `recovery_from_resultants()` (2026-09-09)
+  - [x] 구현 검증: 평판 극한, Case 1·5 특수해(08 §4), 단위셀 변형에너지 일치(9 조합), Briassoulis Fig. 6 경향, 왕복 — 전부 통과 (09 §3.2)
+  - [x] $t/R_{min}>0.2$ 시 보정 방침 — 강성 유지, 능선 응력은 D단계 솔리드 FE 보정계수 (09 §5)
+  - [ ] GENS 절 비틀림($D_{33}$, 16/26) 규약 단일 요소 시험으로 확인 → E-1
+  - [ ] 비대칭 단면($B_{ij}\ne0$) 복원식 $\mathcal B,\alpha_2$ 항 추가 (06 §6과 함께)
 
 ## C. 계산 시트 구현 (`calc/`)
 - [ ] 파이썬 모듈로 등가 물성치 계산 함수 구현 (입력: 형상 파라미터, 재료; 출력: 등가 물성치, 등가 두께)

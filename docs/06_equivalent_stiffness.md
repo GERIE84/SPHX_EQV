@@ -1,6 +1,6 @@
 # 06. 등가 강성 수식 정리 (B-2) — 일방향 주름 단위셀, 국부축
 
-쉐브론 판의 한쪽 영역(능선이 한 방향인 일방향 주름)을 **등가 직교이방성 Kirchhoff 판**으로 치환할 때의 면내 강성 $A_{ij}$와 굽힘 강성 $D_{ij}$를 프로젝트 기호로 통일하여 정리하고, 채택식을 확정한다. 국부축은 `05_geometry_parameters.md` §1 정의($x$ ⊥ 능선, $y$ ∥ 능선)를 따른다. 판 좌표계로의 $\pm\beta$ 회전은 B-3(`07_stiffness_transformation.md`, 예정), 등가 두께·공학상수 변환은 B-4에서 다룬다.
+쉐브론 판의 한쪽 영역(능선이 한 방향인 일방향 주름)을 **등가 직교이방성 Kirchhoff 판**으로 치환할 때의 면내 강성 $A_{ij}$와 굽힘 강성 $D_{ij}$를 프로젝트 기호로 통일하여 정리하고, 채택식을 확정한다. 국부축은 `05_geometry_parameters.md` §1 정의($x$ ⊥ 능선, $y$ ∥ 능선)를 따른다. 판 좌표계로의 $\pm\beta$ 회전은 B-3(`07_stiffness_transformation.md`), 등가 두께·공학상수 변환과 응력 복원은 B-4(`09_equivalent_thickness.md`)에서 다룬다.
 
 구현: `calc/stiffness.py` (모델 5종 + 문헌 표 자체검증 + 기본값 비교표). 근거 문헌 전사는 `02_literature.md` §1–4.
 
@@ -126,5 +126,5 @@ $D_{11}$에도 $\mathcal B^2$ 항이 추가된다(Ye Eq. 11). $B_{22}$가 지배
 ## 8. 다음 단계 연결
 
 - **B-3** (완료, `07_stiffness_transformation.md`): 위 $A, D$(국부축)를 $z$축 회전 $\mp\beta$로 판축 $(x_p,y_p)$에 변환. 회전 후 $A_{16},A_{26},D_{16},D_{26}$이 대각항과 같은 차수; 영역 조합은 FE zone-wise, 수식은 겉보기 강성 + Strip/zone 범위.
-- **B-4**: §5의 면내/굽힘 불일치를 해소하는 등가 두께·입력 방식(preintegrated section vs 층상) 결정, 응력 환산 개념 정리. 응력 환산의 1차 식은 Briassoulis (1986) $K_t=1+6f/t$ 등(`calc/stress_recovery.py`)이며, Xia 케이스 가정·Ye 복원식과 상호 검증한다.
+- **B-4** (완료, `09_equivalent_thickness.md`): 등가 두께 $t_b=\sqrt{12D_{11}/A_{11}}$(3.73 mm, 11/12/22 공통), $t_s=h\lambda$(0.76 mm) — 66 성분 때문에 균질 단일층 불가, 회전 후에는 모든 성분이 다름 → FE 입력은 preintegrated general shell section(ANSYS GENS) 채택(`calc/equivalent_plate.py`). 응력 복원은 VAM 복원식 `stress_recovery.ye_recovery()` 구현·검증 완료(Case 1 $K_t=17$, Case 5 $Ehf\kappa_{yy}$, 에너지 일치).
 - **C-1**: `stiffness.py`를 YAML 입력·보고서 출력까지 감싸는 계산 모듈로 확장.

@@ -30,8 +30,9 @@ docs/
   06_equivalent_stiffness.md  등가 강성 수식 정리 및 채택식 (국부축, 모델 비교, 수치 예)
   07_stiffness_transformation.md  β 회전 변환 및 ±β 영역 조합 규칙
   08_method_review_rve_vs_vam.md  방법론 검토: RVE vs VAM, FEA 필요 범위, 응력 복원식 채택
+  09_equivalent_thickness.md  등가 두께 정의, FE 입력 방식(GENS) 결정, VAM 응력 복원 구현·검증
   fig/                    그림 및 생성 스크립트
-calc/                     계산 모듈: geometry.py(단면 라이브러리), stiffness.py(등가 강성 5모델·채택식), stress_recovery.py(능선 응력 복원), transform.py(β 회전·영역 조합), plate_input_template.yaml(입력 템플릿),
+calc/                     계산 모듈: geometry.py(단면 라이브러리), stiffness.py(등가 강성 5모델·채택식), stress_recovery.py(VAM 응력 복원 + Briassoulis 능선식), transform.py(β 회전·영역 조합), equivalent_plate.py(등가 두께·ANSYS GENS APDL 생성), plate_input_template.yaml(입력 템플릿),
                           verify_{langsu,ye,xia,briassoulis}_tables.py(문헌 수치 재현 검증)
 fea/                      (예정) 등가 물성치 FE 검증 모델
 ```
@@ -43,6 +44,7 @@ fea/                      (예정) 등가 물성치 FE 검증 모델
 - 2026-09-08: Ye et al. (2014) VAM 등가판 모델 전사·검증, 고전식(Seydel·Briassoulis) 통합 비교표 및 채택식 권고 작성. 국부 변형률 복원식 확보로 응력 평가 접근 방향 갱신.
 - 2026-09-09: B-1 형상 파라미터 정의서(`docs/05`) 및 단면 라이브러리(`calc/geometry.py`) 작성. 실제 판 치수 입력 대기.
 - 2026-09-09: 방법론 검토(`docs/08`) — 강성은 이미 VAM 채택식, 응력 복원도 VAM 복원식을 1차 수단으로 결정. FEA는 검증·비주기 영역용으로 범위 불변.
+- 2026-09-09: B-4 등가 두께·FE 입력 방식·VAM 응력 복원(`docs/09`, `calc/equivalent_plate.py`, `calc/stress_recovery.ye_recovery`). 균질 단일층 불가 확인 → ANSYS preintegrated section 채택; 복원식은 평판 극한·Case 1/5·에너지 일치로 검증. B단계 종료.
 - 2026-09-09: B-3 β 좌표 변환·영역 조합 규칙 정리(`docs/07`, `calc/transform.py`). 영역별 연성항의 크기와 조합 방식 민감도 확인, FE는 zone-wise 채택.
 - 2026-09-09: Briassoulis (1986) 원문 확인 — $D_{66}$ 관례 문제 해결, 독립 FE 벤치마크로 채택식 재검증, 능선 응력집중식 $K_t=1+6f/t$ 확보.
 - 2026-09-09: B-2 등가 강성 수식 정리(`docs/06`, `calc/stiffness.py`). 채택식 확정(Ye 2014 Eq. 19 기반), 모델 간 차이 정량화, 면내/굽힘 등가두께 불일치 확인.

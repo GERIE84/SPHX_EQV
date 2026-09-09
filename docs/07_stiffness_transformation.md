@@ -110,5 +110,5 @@ $$K^{eff}_{aa}=\bar S^{-1},\quad K^{eff}_{ab}=\bar S^{-1}P,\quad K^{eff}_{ba}=Q\
 
 ## 7. 다음 단계 연결
 
-- **B-4**: zone-wise $\bar{\mathbf A},\bar{\mathbf D}$(16/26 포함)를 ANSYS에 입력하는 방식 결정. 등방 두께 하나로는 §4.1의 $\bar D_{66}/\bar A_{66}$ 비(예: 32 540/36 470 → $t_e=3.3$ mm)와 $\bar D_{11}/\bar A_{11}$ 비($t_e=2.1$ mm)가 달라 단일 등가 두께가 성립하지 않음을 재확인 → preintegrated section 우선 검토.
+- **B-4** (완료, `09_equivalent_thickness.md`; 결정: preintegrated general shell section, `calc/equivalent_plate.chevron_gens_deck`): zone-wise $\bar{\mathbf A},\bar{\mathbf D}$(16/26 포함)를 ANSYS에 입력하는 방식 결정. 등방 두께 하나로는 §4.1의 $\bar D_{66}/\bar A_{66}$ 비(예: 32 540/36 470 → $t_e=3.27$ mm), $\bar D_{11}/\bar A_{11}$ 비(3.27 mm), $\bar D_{22}/\bar A_{22}$ 비(2.12 mm), 16/26 비(4.51/2.69 mm)가 달라 단일 등가 두께가 성립하지 않음을 재확인 → preintegrated section 우선 검토.
 - **D단계 FE**: 쉐브론 단위셀(±β 포함) 상세 모델로 (i) 영역별 회전식, (ii) apex 경계에서의 전단·비틀림 구속(Strip vs zone-wise 사이의 실제 위치)을 확인.

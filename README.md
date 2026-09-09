@@ -28,8 +28,9 @@ docs/
   04_plate_dimension_form.md  전열판 치수 정의 그림 및 입력 양식
   05_geometry_parameters.md   형상 파라미터 정의서 (기호·측정기준·파생량·유효범위)
   06_equivalent_stiffness.md  등가 강성 수식 정리 및 채택식 (국부축, 모델 비교, 수치 예)
+  07_stiffness_transformation.md  β 회전 변환 및 ±β 영역 조합 규칙
   fig/                    그림 및 생성 스크립트
-calc/                     계산 모듈: geometry.py(단면 라이브러리), stiffness.py(등가 강성 5모델·채택식), stress_recovery.py(능선 응력 복원), plate_input_template.yaml(입력 템플릿),
+calc/                     계산 모듈: geometry.py(단면 라이브러리), stiffness.py(등가 강성 5모델·채택식), stress_recovery.py(능선 응력 복원), transform.py(β 회전·영역 조합), plate_input_template.yaml(입력 템플릿),
                           verify_{langsu,ye,xia,briassoulis}_tables.py(문헌 수치 재현 검증)
 fea/                      (예정) 등가 물성치 FE 검증 모델
 ```
@@ -40,6 +41,7 @@ fea/                      (예정) 등가 물성치 FE 검증 모델
 - 2026-09-08: 기준 문헌 Lang & Su (2022) 원문 확보, 등가 강성식·형상 파라미터 추출 완료 (`docs/02_literature.md`), 수식 전사 검증 스크립트 추가 (`calc/`).
 - 2026-09-08: Ye et al. (2014) VAM 등가판 모델 전사·검증, 고전식(Seydel·Briassoulis) 통합 비교표 및 채택식 권고 작성. 국부 변형률 복원식 확보로 응력 평가 접근 방향 갱신.
 - 2026-09-09: B-1 형상 파라미터 정의서(`docs/05`) 및 단면 라이브러리(`calc/geometry.py`) 작성. 실제 판 치수 입력 대기.
+- 2026-09-09: B-3 β 좌표 변환·영역 조합 규칙 정리(`docs/07`, `calc/transform.py`). 영역별 연성항의 크기와 조합 방식 민감도 확인, FE는 zone-wise 채택.
 - 2026-09-09: Briassoulis (1986) 원문 확인 — $D_{66}$ 관례 문제 해결, 독립 FE 벤치마크로 채택식 재검증, 능선 응력집중식 $K_t=1+6f/t$ 확보.
 - 2026-09-09: B-2 등가 강성 수식 정리(`docs/06`, `calc/stiffness.py`). 채택식 확정(Ye 2014 Eq. 19 기반), 모델 간 차이 정량화, 면내/굽힘 등가두께 불일치 확인.
 - 2026-09-08: Xia et al. (2012) 원문 전사·검증. 3대 기준 문헌 확보 완료, 문헌조사 A-1·A-2 항목 종결. 원호 주름 폐형식·직교이방성 원판 일반형·케이스별 국부 내력 가정 확보.

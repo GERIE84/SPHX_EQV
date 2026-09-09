@@ -22,7 +22,8 @@
   - [ ] 실제 판 치수·재질·설계조건 값 수령 → 템플릿 기입 (그 전까지 05 §5 가정값 사용)
 - [x] 주름 방향/직각 방향 등가 면내 강성(E_x, E_y, G_xy, ν_xy) 및 굽힘 강성(D_x, D_y, D_xy) 수식 정리 — 2026-09-09 `docs/06_equivalent_stiffness.md`, `calc/stiffness.py` (채택식 확정: Ye Eq. 19 기반, 문헌 표·평판 극한 검증)
   - [ ] 비대칭 단면($R_c\ne R_v$) 확인 시 연성 강성 $B_{ij}$ 구현 (06 §6)
-- [ ] 쉐브론 각도 β에 대한 좌표 변환 및 조합식 정리 (→ `docs/07_stiffness_transformation.md`)
+- [x] 쉐브론 각도 β에 대한 좌표 변환 및 조합식 정리 — 2026-09-09 `docs/07_stiffness_transformation.md`, `calc/transform.py` (회전식 검증, zone-wise/Strip/Voigt/Reuss 조합 규칙, 채택: FE는 zone-wise, 수식은 겉보기 강성 + Strip/zone 범위)
+  - [ ] 비대칭 단면 시 6×6 (A,B,D) 회전으로 확장
 - [ ] 등가 두께 정의(면내 기준/굽힘 기준) 및 응력 환산 계수 개념 정리
   - [x] Briassoulis (1986) 능선 응력집중식(B1–B7) 구현 — `calc/stress_recovery.py` (2026-09-09)
   - [ ] Ye (2014) 국부 변형률 복원식(Eq. 14–17, 20)을 이용한 수식 기반 최대응력 산정 절차 정리 (`02_literature.md` §2.6)
@@ -48,6 +49,8 @@
 
 ## E. 등가 물성치 FE 적용
 - [ ] 직교이방성 쉘 등가 평판 모델 구축 및 상세 모델과 변위·반력 비교
+  - [ ] zone-wise 이방성(16/26 포함) 입력 방식 확정 (preintegrated section vs 회전 층상 쉘)
+  - [ ] apex 경계의 전단·비틀림 구속 정도 확인 (Strip vs zone-wise 사이 실제 위치, 07 §4.2)
 - [ ] 조립체 모델 적용 절차 정리
 
 ## F. 확장 단계

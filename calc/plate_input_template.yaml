@@ -1,0 +1,79 @@
+# SPHX 쉐브론 전열판 입력 템플릿 — 정의는 docs/05_geometry_parameters.md, 값 출처는 docs/04_plate_dimension_form.md
+# 단위: mm, N, MPa, 도(°).  값이 없는 항목은 null 로 둔다.  ※ 아래 숫자는 05 §5 의 '가정 기본값'이다.
+
+meta:
+  plate_id: "SPHX-example"          # 판 식별자
+  source: "assumed defaults (docs/05 §5)"   # 도면 번호 / 측정 보고서 등
+  date: "2026-09-09"
+
+section:                            # docs/05 §2.1 — 입력 조합 규칙 중 하나만 채운다
+  profile: arc_tangent              # sinusoidal | arc_tangent | trapezoidal | round
+  p: 9.0                            # 피치 (능선 수직, 산-산, 중앙면)
+  H: 3.2                            # 깊이 (중앙면 산-골)
+  t: 0.6                            # 공칭 판 두께
+  R_c: 1.5                          # 산 원호 반경 (중앙면)     [arc_tangent 모드 A]
+  R_v: null                         # 골 원호 반경 (null → R_c)
+  alpha_deg: null                   # 플랭크 각                 [arc_tangent 모드 B / trapezoidal]
+  R: null                           # round 전용: 반원 반경
+  L: null                           # round 전용: 수직 직선 길이
+  dims_reference: mid_surface       # mid_surface | outer_surface  (outer 이면 H_o=H+t 로 입력된 것)
+  pitch_reference: normal_to_ridge  # normal_to_ridge | along_plate_axis
+
+chevron:                            # docs/05 §2.2
+  beta_deg: 60.0                    # 능선-유동축 각
+  beta_reference: flow_axis         # flow_axis | horizontal  (horizontal 이면 beta = 90 - 값)
+  n_apex: 1
+  s_apex: null
+  apex_join: continuous             # continuous | offset
+  r_apex: null
+  w_apex: 0.0
+  stack_rotation: rot180            # rot180 | same
+
+plate:                              # docs/05 §2.3
+  plate_shape: circular             # circular | rectangular
+  D_p: null                         # 원형: 외경
+  D_e: null                         # 원형: 유효 주름 영역 지름
+  L_p: null                         # 직사각형: 길이 (y_p 방향)
+  W_p: null
+  L_e: null
+  W_e: null
+  b_m: null                         # 외주 평탄 테두리 폭
+  w_ro: null                        # 런아웃 폭
+  h_rim: null                       # 테두리 오프셋
+  rim_joint: laser_weld             # laser_weld | gasket | braze
+  rim_joint_pairs: "n-(n+1) periphery, (n+1)-(n+2) port"   # 접합 구성 설명
+  w_weld: null
+  N_port: 2
+  d_port: null
+  e_port: null
+  b_port: null
+  h_port: null
+  port_joint: laser_weld
+  d_flat_port: null
+
+stack:                              # docs/05 §2.4
+  N_p: null
+  s_p: null                         # null → H + t 로 계산
+  b_ch_hot: null
+  b_ch_cold: null
+  contact: point                    # point | line
+  contact_joined: false             # 접촉점 용접/브레이징 여부
+
+material:                           # docs/05 §2.5
+  name: "SA-240 316L"
+  E: 193000.0                       # MPa (설계온도 값으로 교체)
+  nu: 0.3
+  T_design: null                    # °C
+  t_min: null                       # 성형 후 최소 두께 (null → t)
+  corrosion_allowance: 0.0
+  tolerance: {p: null, H: null, t: null}
+
+loads:                              # docs/04 D절
+  P_plate_side: null                # MPa
+  P_shell_side: null
+  dP_max: null                      # 판 양면 최대 압력차
+  high_pressure_face: null          # crest | valley  (고압측이 산 쪽인지 골 쪽인지)
+  P_test: null
+  dT_across_plate: null             # °C
+  N_cycles: null
+  design_code: null                 # ASME VIII Div.1 | Div.2 | EN 13445 | company

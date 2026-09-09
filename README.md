@@ -26,8 +26,10 @@ docs/
   02_literature.md        문헌조사 (등가 직교이방성 모델 중심)
   03_next_steps.md        Claude Code 이관 이후 작업 항목
   04_plate_dimension_form.md  전열판 치수 정의 그림 및 입력 양식
+  05_geometry_parameters.md   형상 파라미터 정의서 (기호·측정기준·파생량·유효범위)
   fig/                    그림 및 생성 스크립트
-calc/                     등가 수식 계산 스크립트 (verify_{langsu,ye,xia}_tables.py: 문헌 수치 재현 검증)
+calc/                     계산 모듈: geometry.py(단면 라이브러리), plate_input_template.yaml(입력 템플릿),
+                          verify_{langsu,ye,xia}_tables.py(문헌 수치 재현 검증)
 fea/                      (예정) 등가 물성치 FE 검증 모델
 ```
 
@@ -36,4 +38,5 @@ fea/                      (예정) 등가 물성치 FE 검증 모델
 - 2026-09: 프로젝트 정의, 용도·범위 결정, 문헌조사 착수.
 - 2026-09-08: 기준 문헌 Lang & Su (2022) 원문 확보, 등가 강성식·형상 파라미터 추출 완료 (`docs/02_literature.md`), 수식 전사 검증 스크립트 추가 (`calc/`).
 - 2026-09-08: Ye et al. (2014) VAM 등가판 모델 전사·검증, 고전식(Seydel·Briassoulis) 통합 비교표 및 채택식 권고 작성. 국부 변형률 복원식 확보로 응력 평가 접근 방향 갱신.
+- 2026-09-09: B-1 형상 파라미터 정의서(`docs/05`) 및 단면 라이브러리(`calc/geometry.py`) 작성. 실제 판 치수 입력 대기.
 - 2026-09-08: Xia et al. (2012) 원문 전사·검증. 3대 기준 문헌 확보 완료, 문헌조사 A-1·A-2 항목 종결. 원호 주름 폐형식·직교이방성 원판 일반형·케이스별 국부 내력 가정 확보.

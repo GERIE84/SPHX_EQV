@@ -11,7 +11,8 @@
   - [x] Seydel / 1960년대 통용식 / Briassoulis 수식 — Ye (2014) 2차 전사로 확보·검증 (`02_literature.md` §3)
   - [x] Xia (2012) 원문 확보·전사·수치검증 (2026-09-08, `02_literature.md` §3, `calc/verify_xia_tables.py`). $A_{22}$ 원식 확정, Ye 전사 오류 확인
   - [x] Samanta & Mukhopadhyay, Yokozeki 수식 — Xia (2012) Table 3·4 전사로 확보 (§3.4)
-  - [ ] (선택) Briassoulis, Samanta & Mukhopadhyay 원문 — $D_{66}$ 관례 차이, S&M 계수 불일치 확인. 채택식이 아니므로 우선순위 낮음
+  - [x] Briassoulis (1986) 원문 확보·확인 (2026-09-09, `02_literature.md` §4.1, `calc/verify_briassoulis_tables.py`) — $D_{66}$ 관례 문제 해결, 독립 FE 벤치마크, 응력집중식 확보
+  - [ ] (선택) Samanta & Mukhopadhyay 원문 — 계수 불일치 확인. 우선순위 낮음
 - [ ] 쉐브론 판 강성/좌굴 관련 문헌 확보
 
 ## B. 형상 파라미터 및 수식 정리
@@ -34,6 +35,7 @@
 - [ ] 쉐브론 단위 셀/단일 판 상세 쉘 모델 구축 (ANSYS APDL, 파라메트릭)
   - [ ] 일방향 주름 단위셀(Dirichlet BC, Xia Table 1 방식)로 등가 강성 산출 루틴 검증 → 쉐브론 단위셀로 확장
   - [ ] 전체 판 굽힘 해석으로 $D_{22}$ 상한 문제(Xia vs Lang & Su/Ye) 재현 확인
+  - [ ] 비틀림 케이스로 $D_{66}$의 $\lambda$ 계수 확정 (Ye/VAPAS vs Briassoulis FE, 06 §7-7)
 - [ ] 면내 인장/전단, 굽힘, 압력차 하중 케이스 해석
 - [ ] 등가 강성 및 최대응력 추출 → 수식 결과와 비교, 환산 계수 산정
   - [ ] Ye 복원식으로 계산한 국부 응력과 상세 FE 응력 비교 (일방향 주름 단위 셀 → 쉐브론 꺾임부 보정)

@@ -63,6 +63,8 @@ material:                           # docs/05 §2.5
   name: "SA-240 316L"
   E: 193000.0                       # MPa (설계온도 값으로 교체)
   nu: 0.3
+  rho: 7.9e-9                       # tonne/mm³ (질량 입력 SSPM 용)
+  S_allow: null                     # MPa 허용응력 (설계코드·온도 기준; load_cases 판정에 사용)
   T_design: null                    # °C
   t_min: null                       # 성형 후 최소 두께 (null → t)
   corrosion_allowance: 0.0
@@ -77,3 +79,17 @@ loads:                              # docs/04 D절
   dT_across_plate: null             # °C
   N_cycles: null
   design_code: null                 # ASME VIII Div.1 | Div.2 | EN 13445 | company
+
+load_cases:                         # 선택. 판축(plate) 또는 국부축(local) 합력 → VAM 응력 복원 (docs/09 §4). 없으면 목록 비움([])
+  - name: "unit Nx (local)"         # 케이스 이름
+    axes: local                     # local | plate  (plate 이면 zone 의 국부축으로 회전: transform.resultants_to_local)
+    zone: right                     # right | left   (plate 축일 때 의미)
+    N: [10.0, 0.0, 0.0]             # N_x, N_y, N_xy [N/mm]
+    M: [0.0, 0.0, 0.0]              # M_x, M_y, M_xy [N·mm/mm]  (M_xy 는 공학 비틀림 κ_xy 에 대응)
+    allowable: null                 # MPa (null → material.S_allow)
+  - name: "plate-axis My (right zone)"
+    axes: plate
+    zone: right
+    N: [0.0, 0.0, 0.0]
+    M: [0.0, 100.0, 0.0]
+    allowable: null

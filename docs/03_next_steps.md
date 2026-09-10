@@ -36,7 +36,8 @@
 ## C. 계산 시트 구현 (`calc/`)
 - [x] 파이썬 모듈로 등가 물성치 계산 함수 구현 (입력: 형상 파라미터, 재료; 출력: 등가 물성치, 등가 두께) — 2026-09-10 `calc/plate_model.py` (YAML → report.md / results.json / sections.inp; 전처리 규칙, 경고, 하중 케이스 응력 복원·판정), `docs/10_calc_module.md`, 예시 출력 `docs/example_report/`
   - [ ] 실제 판 치수 수령 후 템플릿 기입·실행 (경고 항목 해소: t_min, D_e/W_e, S_allow)
-- [ ] 엑셀 계산 시트 동일 로직 구현 (설계 현장 사용용) — `results.json` 대조
+- [x] 엑셀 계산 시트 동일 로직 구현 (설계 현장 사용용) — 2026-09-10 `calc/SPHX_EQV_calc.xlsx` (생성기 `calc/make_excel_sheet.py`; 원호+접선 단면, 채택식, 등가 두께, ±β 영역 강성, APDL 문자열, 산·골 VAM 응력·판정; `formulas` 평가로 파이썬 대비 1.5e-7 일치, docs/10 §7)
+  - [ ] 실제 엑셀에서 열어 재계산·드롭다운·서식 확인 (이 환경에는 Calc 없음)
 - [ ] 파라메트릭 스터디 (β, h/p, t 변화에 따른 등가 강성 경향)
   - [ ] $K_t = 1+6f/t$ 및 $A_{22}/A_{11}$ 비의 $f/t$, $H/p$ 의존성 포함 (두께 결정 지배 인자 파악)
 

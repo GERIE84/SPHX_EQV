@@ -131,7 +131,7 @@ def _z(v: float, tol: float = 1e-9) -> float:
 def _recovery_summary(r: RecoveryResult) -> Dict[str, Any]:
     vm, side, i = r.max_vm(); ic = int(np.argmax(r.z))
     Q_vm_m = np.sqrt(r.N_s**2 - r.N_s * r.N_y + r.N_y**2)  # 막 합력 등가 [N/mm]
-    return dict(max_vm=vm, at_x=float(r.x[i]), at_z=float(r.z[i]), fibre="outer" if side == 0 else "inner", ic=ic,
+    return dict(max_vm=vm, at_x=float(r.x[i]), at_z=float(r.z[i]), fibre="+z" if side == 0 else "-z", ic=ic,
                 ridge_sig_s=[_z(r.sig_s[0, ic]), _z(r.sig_s[1, ic])], ridge_sig_y=[_z(r.sig_y[0, ic]), _z(r.sig_y[1, ic])],
                 ridge_tau=[_z(r.tau[0, ic]), _z(r.tau[1, ic])], ridge_N_s=_z(r.N_s[ic]), ridge_N_y=_z(r.N_y[ic]),
                 ridge_M_s=_z(r.M_s[ic]), ridge_M_y=_z(r.M_y[ic]), membrane_eq_max=float(np.max(Q_vm_m)))
@@ -287,7 +287,7 @@ class PlateModel:
           f"E11 = E22 = {self.E_ts['E11']:.4g} N/mm, 밀도(단위두께) {self.dens_area:.4g} tonne/mm². 비틀림 D33 규약은 E-1 단일 요소 시험으로 확인.\n")
         a("## 6. 응력 복원 — 단위 합력 응답 (국부축, VAM 복원식 docs/09 §3)\n")
         a(f"능선 가로 인장 응력집중계수 K_t = 1 + 6f/t = {self.kt:.2f}\n")
-        a("| 합력 (단위) | max σ_vM / 단위 [MPa] | 위치 x, z [mm] | 면 | 능선 σ_s 외/내 | 능선 σ_y 외/내 |\n|---|---|---|---|---|---|")
+        a("| 합력 (단위) | max σ_vM / 단위 [MPa] | 위치 x, z [mm] | 면 (+z/−z) | 능선 σ_s +z/−z | 능선 σ_y +z/−z |\n|---|---|---|---|---|---|")
         for u in self.unit_response:
             a(f"| {u['resultant']} = 1 {u['unit']} | {u['max_vm_per_unit']:.4g} | {u['at_x']:.2f}, {u['at_z']:+.2f} | {u['fibre']} | "
               f"{u['ridge_sig_s'][0]:.3g} / {u['ridge_sig_s'][1]:.3g} | {u['ridge_sig_y'][0]:.3g} / {u['ridge_sig_y'][1]:.3g} |")
@@ -298,7 +298,7 @@ class PlateModel:
                 a(f"| {r.name} | {r.axes}/{r.zone} | {', '.join(f'{v:.3g}' for v in r.N_local)} | {', '.join(f'{v:.3g}' for v in r.M_local)} | "
                   f"{r.max_vm:.4g} | x={r.at_x:.2f}, z={r.at_z:+.2f}, {r.fibre} | {r.membrane_vm_max:.4g} | "
                   f"{'-' if r.allowable is None else f'{r.allowable:g}'} | {'-' if r.ratio is None else f'{r.ratio:.2f}'} | {r.verdict or '-'} |")
-            a("\n능선 상세 (외측/내측): σ_s, σ_y, τ [MPa]; 국부 합력 N_s, N_y [N/mm], M_s, M_y [N·mm/mm]\n")
+            a("\n능선(산) 상세 (+z면/−z면; +z = 판의 산 쪽 표면): σ_s, σ_y, τ [MPa]; 국부 합력 N_s, N_y [N/mm], M_s, M_y [N·mm/mm]\n")
             a("| 케이스 | σ_s | σ_y | τ | N_s | N_y | M_s | M_y |\n|---|---|---|---|---|---|---|---|")
             for r in self.load_results:
                 a(f"| {r.name} | {r.ridge_sig_s[0]:.3g} / {r.ridge_sig_s[1]:.3g} | {r.ridge_sig_y[0]:.3g} / {r.ridge_sig_y[1]:.3g} | "

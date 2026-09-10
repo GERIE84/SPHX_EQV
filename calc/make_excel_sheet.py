@@ -23,10 +23,12 @@ from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.workbook.defined_name import DefinedName
 from openpyxl.worksheet.datavalidation import DataValidation
+from openpyxl.drawing.image import Image as XLImage
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "SPHX_EQV_calc.xlsx")
 REF = os.path.join(HERE, "..", "docs", "example_report", "results.json")
+FIG = os.path.join(HERE, "..", "docs", "fig")
 
 FONT = "Arial"
 F_BASE = Font(name=FONT, size=10)
@@ -139,7 +141,8 @@ def build() -> Workbook:
         ("  2. 단면 입력 모드: A = R_c(,R_v) 입력 → 플랭크 각 α 를 Newton 반복으로 계산 / B = α 입력, R_c=R_v 계산.", F_BASE),
         ("  3. 'Geometry' 상단 경고 행과 'Check' 시트(파이썬 대조)를 확인한다. Check 의 오차는 기본값 입력에서만 의미가 있다.", F_BASE),
         ("  4. 'Rotation' 시트 하단의 SSPA/SSPD/SSPE/SSPM 문자열을 ANSYS 입력파일에 복사한다 (비틀림 규약은 E-1 확인 전까지 'verify').", F_BASE),
-        ("  5. 'Stress' 시트에 판축 또는 국부축 합력을 넣으면 산·골 4개 표면점의 응력과 최대 von Mises, 허용응력 비가 나온다.", F_BASE),
+        ("  5. 'Stress' 시트에 판축 또는 국부축 합력을 넣으면 산·골 × +z/−z 면 4개 표면점의 응력과 최대 von Mises, 허용응력 비가 나온다.", F_BASE),
+        ("  6. 입력 항목의 위치는 'Input' 시트 오른쪽 그림 1~4 (단면 / 쉐브론·판축 / 하중 / 응력 출력 위치) 를 따른다. 노란 라벨 = 시트 입력 기호.", F_BASE),
         ("", F_BASE),
         ("범위·한계", F_BOLD),
         ("  - 단면은 원호+접선(arc_tangent)만. 사인형/사다리꼴/반원 단면은 파이썬 모듈 사용.", F_BASE),
@@ -160,7 +163,7 @@ def build() -> Workbook:
     s.section("판 식별")
     s.add("in_id", "판 식별자", "SPHX-example", "", "도면 번호 등", kind="input")
     s.add(None, "값 출처", "assumed defaults (docs/05 §5)", "", "예시값은 05 §5 가정 기본값 — 실제 도면값으로 교체", kind="input")
-    s.section("단면 (docs/05 §2.1, 중앙면 기준)")
+    s.section("단면 (docs/05 §2.1, 중앙면 기준)  → 오른쪽 [그림 1] 참조")
     s.add("in_p", "피치 p", 9.0, "mm", "능선 수직 산-산 거리 (pitch_reference 에 따라 환산)", FMT_MM, "input")
     s.add("in_H", "깊이 H", 3.2, "mm", "산-골 높이차 (dims_reference 에 따라 환산)", FMT_MM, "input")
     s.add("in_t", "공칭 두께 t", 0.6, "mm", "", FMT_MM, "input")
@@ -170,10 +173,10 @@ def build() -> Workbook:
     s.add("in_alpha", "플랭크 각 α (입력)", None, "°", "모드 B 전용", FMT_MM, "input")
     s.add("in_dims", "치수 기준 dims_reference", "mid", "", "mid: 중앙면 | outer: 외면 (H = H_in − t 로 환산)", kind="input")
     s.add("in_pitchref", "피치 기준 pitch_reference", "normal", "", "normal: 능선 수직 | axis: x_p 방향 측정 (p = p_in·cosβ)", kind="input")
-    s.section("쉐브론 (docs/05 §2.2)")
+    s.section("쉐브론 (docs/05 §2.2)  → [그림 2] 참조")
     s.add("in_beta", "쉐브론 각 β (입력)", 60.0, "°", "", FMT_MM, "input")
     s.add("in_betaref", "β 기준 beta_reference", "flow", "", "flow: 유동축 기준 | horizontal: 수평 기준 (β = 90 − 입력)", kind="input")
-    s.section("재료 (docs/05 §2.5)")
+    s.section("재료 (docs/05 §2.5)  → [그림 1] 두께 상자 참조")
     s.add(None, "재질", "SA-240 316L", "", "", kind="input")
     s.add("in_E", "탄성계수 E", 193000.0, "MPa", "설계온도 값 사용", FMT_K, "input")
     s.add("in_nu", "포아송비 ν", 0.3, "", "", FMT_MM, "input")
@@ -181,7 +184,7 @@ def build() -> Workbook:
     s.add("in_tmin", "성형 후 최소 두께 t_min", None, "mm", "비우면 공칭 t 사용 (경고 표시)", FMT_MM, "input")
     s.add("in_CA", "부식 여유 CA", 0.0, "mm", "", FMT_MM, "input")
     s.add("in_Sallow", "허용응력 S_allow", None, "MPa", "설계코드·온도 기준. 비우면 판정 생략", FMT_K, "input")
-    s.section("하중 케이스 (docs/10 §2.2) — 합력은 별도 산정값")
+    s.section("하중 케이스 (docs/10 §2.2) — 합력은 별도 산정값  → [그림 3] 하중, [그림 4] 응력 출력 위치 참조")
     s.add("lc_name", "케이스 이름", "plate-axis My (right zone)", "", "", kind="input")
     s.add("lc_axes", "합력 좌표축 axes", "plate", "", "plate: 판축 (x_p, y_p) | local: 국부축 (x ⊥ 능선)", kind="input")
     s.add("lc_zone", "영역 zone", "right", "", "right: θ = −β | left: θ = +β (plate 축일 때만 사용)", kind="input")
@@ -200,6 +203,21 @@ def build() -> Workbook:
                        ("in_betaref", '"flow,horizontal"'), ("lc_axes", '"plate,local"'), ("lc_zone", '"right,left"')):
         addr = wb.defined_names[fix_name(name)].attr_text.split("!")[1].replace("$", "")
         dv = DataValidation(type="list", formula1=opts, allow_blank=False); ws.add_data_validation(dv); dv.add(addr)
+    # 입력 위치 안내 그림 (docs/fig/make_excel_input_figures.py). 2열 배치: F열(그림 1, 2), T열(그림 3, 4)
+    legends = {
+        1: "[그림 1] 단면 입력 — p 피치(능선 수직) · H 깊이(중앙면, dims=mid) · H_o=H+t 외면 높이(dims=outer) · t 두께 · R_c/R_v 산·골 원호 반경(중앙면) · α 플랭크 각(모드 B) · T_L 접선 길이(계산값) · crest 산 / valley 골 · +z face 산 쪽 표면 · 상자: 계산 두께 t_calc = (t_min 또는 t) − CA",
+        2: "[그림 2] 쉐브론·판축 — β 능선–유동축(y_p) 각(beta_reference=flow) · 90°−β 수평 기준 각(horizontal) · zone right(θ=−β)/left(θ=+β) apex 좌우 영역 · p 능선 수직 피치(pitch_reference=normal) · p_axis=p/cosβ x_p 방향 측정 피치(axis) · x ⊥ 능선, y ∥ 능선 국부축",
+        3: "[그림 3] 하중 케이스 — N_x, N_y, N_xy 단위폭 막력 [N/mm], M_x, M_y, M_xy 단위폭 모멘트 [N·mm/mm] · axes=local 이면 그림의 국부축(x ⊥ 능선) 값, plate 이면 판축(x_p, y_p) 값(시트가 zone 에 따라 ∓β 회전) · 부호: 인장 +, M>0 이면 +z 면 압축",
+        4: "[그림 4] 응력 출력 위치(Stress 시트) — 산(crest)·골(valley) × +z 면/−z 면 4점 · Stress 시트 B~E 열 순서와 동일 · N_x>0 이면 산 −z 면·골 +z 면에 K_t = 1+6f/t 집중",
+    }
+    for i, (col, row) in enumerate(((6, 3), (6, 30), (20, 3), (20, 30)), 1):
+        img = XLImage(os.path.join(FIG, ["xl_fig1_section", "xl_fig2_plan", "xl_fig3_loads", "xl_fig4_stress_points"][i - 1] + ".png"))
+        scale = 820 / img.width; img.width, img.height = int(img.width * scale), int(img.height * scale)
+        c = ws.cell(row=row - 1, column=col, value=legends[i]); c.font = F_NOTE; c.alignment = Alignment(wrap_text=False)
+        img.anchor = f"{get_column_letter(col)}{row}"; ws.add_image(img)
+    ws.column_dimensions["E"].width = 3
+    for cc in range(6, 34):
+        ws.column_dimensions[get_column_letter(cc)].width = 9
 
     # ------------------------------------------------------------------ Geometry
     g = SheetBuilder(wb, "Geometry", "형상 전처리·파생량 (docs/05 §3, 원호+접선 폐형식)")
@@ -415,9 +433,9 @@ def build() -> Workbook:
         wb.defined_names[nm + "_c"] = DefinedName(nm + "_c", attr_text=f"'Stress'!$B${r}")
         wb.defined_names[nm + "_v"] = DefinedName(nm + "_v", attr_text=f"'Stress'!$C${r}")
         st.row += 1
-    st.section("표면 응력 (ζ = +h/2 외측 / −h/2 내측;  e = ε − ζκ;  평면응력)  [MPa]")
+    st.section("표면 응력 (+z 면: ζ = +h/2, −z 면: ζ = −h/2 — 판의 산 쪽 표면이 +z;  e = ε − ζκ;  평면응력)  [MPa]  → Input [그림 4]")
     hdr = st.row
-    cols = ("산 외측", "산 내측", "골 외측", "골 내측")
+    cols = ("산 +z면", "산 −z면", "골 +z면", "골 −z면")
     st.ws.column_dimensions["E"].width = 16; st.ws.column_dimensions["F"].width = 16
     for c, txt in enumerate(("량",) + cols + ("식",), 1):
         st.cell(hdr, c, txt, F_BOLD, border=True)
@@ -456,7 +474,7 @@ def build() -> Workbook:
     vm_r = addr["vm"]
     st.section("결과 요약·판정")
     st.add("vm_max", "최대 von Mises (산·골 4점)", f"=MAX($B${vm_r}:$E${vm_r})", "MPa", "플랭크 분포는 파이썬 전용", FMT_K)
-    st.add("vm_where", "최대 위치", f'=CHOOSE(MATCH(vm_max,$B${vm_r}:$E${vm_r},0),"산 외측","산 내측","골 외측","골 내측")', "", "", kind="text")
+    st.add("vm_where", "최대 위치", f'=CHOOSE(MATCH(vm_max,$B${vm_r}:$E${vm_r},0),"산 +z면","산 −z면","골 +z면","골 −z면")', "", "", kind="text")
     st.add("Ns_c", "산 막력 N_s = Q h (ε_s + ν ε_y)", "=Q_*h_*(eps_s_c+nu_*eps_y_c)", "N/mm", "능선 국부 합력", FMT_MM)
     st.add("Ny_c", "산 막력 N_y", "=Q_*h_*(eps_y_c+nu_*eps_s_c)", "N/mm", "", FMT_MM)
     st.add("Ms_c", "산 모멘트 M_s = Q h³/12 (κ_s + ν κ_y)", "=Q_*h_^3/12*(kap_s_c+nu_*kap_y_c)", "N·mm/mm", "", FMT_MM)
@@ -465,7 +483,7 @@ def build() -> Workbook:
     st.add("allow_", "허용응력 (케이스 → S_allow)", "=IF(ISBLANK(lc_allow),IF(ISBLANK(in_Sallow),0,in_Sallow),lc_allow)", "MPa", "0 이면 판정 생략", FMT_K)
     st.add("ratio_", "σ_vM,max / 허용", '=IF(allow_>0,vm_max/allow_,"-")', "", "", FMT_MM)
     st.add("verdict", "판정", '=IF(allow_>0,IF(vm_max<=allow_,"OK","NG"),"허용응력 미입력")', "", "선형 복원 응력 단순 비교. apex·테두리·t/R 보정 미포함", kind="text")
-    st.note("특수해 검사: N_x 만 → 산 내측 σ_s/(N_x/h) = K_t = 1+6f/h ;  κ_yy 만 → 산 N_y = E h f κ_yy (Briassoulis Eq. 12).")
+    st.note("특수해 검사: N_x 만 → 산 −z면 σ_s/(N_x/h) = K_t = 1+6f/h ;  κ_yy 만 → 산 N_y = E h f κ_yy (Briassoulis Eq. 12).")
 
     # ------------------------------------------------------------------ Check
     ref = json.load(open(REF, encoding="utf-8"))
@@ -486,10 +504,10 @@ def build() -> Workbook:
         ("A11 우측", "=A11_R", zr["A11"], "transform.zone_stiffness"), ("A16 우측", "=A16_R", zr["A16"], ""), ("A26 우측", "=A26_R", zr["A26"], ""),
         ("D12 우측", "=D12_R", zr["D12"], ""), ("D16 우측", "=D16_R", zr["D16"], ""), ("D66 우측", "=D66_R", zr["D66"], ""),
         ("M_x 국부", "=Mx", lc["M_local"][0], "resultants_to_local"), ("M_xy 국부", "=Mxy", lc["M_local"][2], ""),
-        ("산 외측 σ_s", f"=Stress!$B${addr['ss']}", lc["ridge_sig_s"][0], "ye_recovery (능선)"),
-        ("산 내측 σ_s", f"=Stress!$C${addr['ss']}", lc["ridge_sig_s"][1], ""),
-        ("산 외측 σ_y", f"=Stress!$B${addr['sy']}", lc["ridge_sig_y"][0], ""), ("산 내측 σ_y", f"=Stress!$C${addr['sy']}", lc["ridge_sig_y"][1], ""),
-        ("산 외측 τ", f"=Stress!$B${addr['tt']}", lc["ridge_tau"][0], ""), ("산 내측 τ", f"=Stress!$C${addr['tt']}", lc["ridge_tau"][1], ""),
+        ("산 +z면 σ_s", f"=Stress!$B${addr['ss']}", lc["ridge_sig_s"][0], "ye_recovery (능선)"),
+        ("산 −z면 σ_s", f"=Stress!$C${addr['ss']}", lc["ridge_sig_s"][1], ""),
+        ("산 +z면 σ_y", f"=Stress!$B${addr['sy']}", lc["ridge_sig_y"][0], ""), ("산 −z면 σ_y", f"=Stress!$C${addr['sy']}", lc["ridge_sig_y"][1], ""),
+        ("산 +z면 τ", f"=Stress!$B${addr['tt']}", lc["ridge_tau"][0], ""), ("산 −z면 τ", f"=Stress!$C${addr['tt']}", lc["ridge_tau"][1], ""),
         ("최대 von Mises", "=vm_max", lc["max_vm"], "파이썬 전 단면 최대 (산·골에서 발생)"),
     ]
     first = ck.row

@@ -125,3 +125,5 @@
 ---
 
 **작성 후 처리 순서**: 이 양식 값 확정 → B-1 형상 파라미터 정의서(`docs/05_geometry_parameters.md`, 예정)에 반영 → `calc/` 계산 모듈의 입력 파일(`calc/plate_input.yaml`, 예정)로 변환.
+
+> 엑셀 계산 시트용 입력 위치 안내 그림(단면·쉐브론·하중·응력 출력 위치)은 `docs/fig/xl_fig1_section.png` ~ `xl_fig4_stress_points.png`이며 `calc/SPHX_EQV_calc.xlsx` Input 시트에 삽입되어 있다.

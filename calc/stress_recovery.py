@@ -121,7 +121,7 @@ class RecoveryResult:
     x: np.ndarray; z: np.ndarray
     eps_s: np.ndarray; eps_y: np.ndarray; gam_sy: np.ndarray        # 물리 막변형률
     kap_s: np.ndarray; kap_y: np.ndarray; kap_sy2: np.ndarray        # 물리 곡률 (kap_sy2 = 2κ_sy)
-    sig_s: np.ndarray; sig_y: np.ndarray; tau: np.ndarray            # (2, n): [0]=외측(ζ=+h/2, 법선 n 쪽), [1]=내측
+    sig_s: np.ndarray; sig_y: np.ndarray; tau: np.ndarray            # (2, n): [0]=+z면(ζ=+h/2, 법선 n 쪽 = 판의 산 쪽 표면), [1]=−z면.  ※ 골에서는 +z면이 오목면
     vm: np.ndarray                                                   # (2, n) von Mises
     N_s: np.ndarray; N_y: np.ndarray; M_s: np.ndarray; M_y: np.ndarray  # 국부 합력 (단위 호 길이당)
 

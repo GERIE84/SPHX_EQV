@@ -81,16 +81,18 @@ load_cases:
 | 시트 | 내용 |
 |---|---|
 | README | 사용법, 색 규칙(파랑+노랑 = 입력, 검정 = 수식, 녹색 = 시트 간 참조), 범위·한계 |
-| Input | 단면(p, H, t, R_c, R_v 또는 α), 기준 플래그(dims/pitch/beta reference), β, 재료(E, ν, ρ, t_min, CA, S_allow), 하중 케이스 1건(axes, zone, N, M, allowable). 드롭다운 검증 포함 |
+| Input | 단면(p, H, t, R_c, R_v 또는 α), 기준 플래그(dims/pitch/beta reference), β, 재료(E, ν, ρ, t_min, CA, S_allow), 하중 케이스 1건(axes, zone, N, M, allowable). 드롭다운 검증 포함. 오른쪽에 입력 위치 안내 그림 4장(단면 / 쉐브론·판축 / 하중 / 응력 출력 위치, `docs/fig/xl_fig1~4_*.png`, 생성기 `docs/fig/make_excel_input_figures.py`)과 한글 범례 행 |
 | Geometry | 전처리 4규칙, 원호+접선 해(모드 A: Newton 20회 반복표 — $F(\alpha)=R_s(1-\cos\alpha)+(c-R_s\sin\alpha)\tan\alpha-H$, $F'=(c-R_s\sin\alpha)/\cos^2\alpha$, 반복값을 $(0.001, \alpha_{hi})$로 제한; 모드 B: α 입력 → R 선형해), $l, I_1, I_2, \lambda, J_1, J_2, A_u, I_u$, 무차원, 경고 4행 |
 | Stiffness | 채택식 $A, D$ 8성분, 직교이방성 비, 모델 비교(Xia $D_{22}$, Lang & Su $A_{11}, A_{22}$, Ye 얕은식), 등가 두께 $t_b, t_s, t_m$, 균질 단일층 상수와 66 잔차, $K_t$ |
 | Rotation | 우·좌 영역 $\bar A,\bar D$ 12성분(Q̄ 폐형식), 횡전단 추정, 면적 밀도, **SSPA/SSPB/SSPD/SSPE/SSPM 문자열**(TEXT 함수로 조립, 복사용) |
-| Stress | 판축 합력 → 국부축($T_\sigma$) → 거시 변형률(채택식 역행렬) → VAM 상수($\mathcal C, c_1, c_2, c_4, \alpha_1$) → 산·골 물리 변형률 → 4 표면점 응력·von Mises → 최대값·위치, 능선 합력, 막 von Mises, 허용응력 비·판정 |
+| Stress | 판축 합력 → 국부축($T_\sigma$) → 거시 변형률(채택식 역행렬) → VAM 상수($\mathcal C, c_1, c_2, c_4, \alpha_1$) → 산·골 물리 변형률 → 4 표면점(산·골 × +z면·−z면) 응력·von Mises → 최대값·위치, 능선 합력, 막 von Mises, 허용응력 비·판정 |
 | Check | 파이썬 `results.json` 참조값(하드코딩) 대비 상대오차 28항목과 최대값 — 기본값 입력에서만 의미 |
 
 **파이썬 모듈과의 범위 차이**: 단면은 원호+접선만(사인형·사다리꼴·반원은 파이썬), 응력은 산·골 두 위치만(플랭크 분포는 파이썬). 6개 단위 하중 모두 최대 응력이 산 또는 골에 생기므로(§5) 두께 사이징 용도에는 충분하다.
 
 **검증**: 이 환경에는 LibreOffice Calc가 없어 `formulas` 라이브러리(pip)로 워크북 전체를 평가했다. 기본값에서 Check 28항목 최대 상대오차 $1.5\times10^{-7}$(파이썬의 800점 표본 위치 차이), 시나리오 2(모드 B α 입력 + 국부 $N_x=10$, 허용 200 MPa)에서 $K_t=17.000$, 산 내측 $\sigma_s/(N_x/h)=17.000$, 최대 von Mises 252.75 MPa, 판정 NG를 재현. 수식 오류 셀 0. 엑셀에서는 열 때 전체 재계산된다(`fullCalcOnLoad`).
+
+**표면 명칭**: 응력 출력의 두 면은 +z면(ζ=+h/2, 판의 산 쪽 표면)과 −z면으로 부른다. 산에서는 +z면이 볼록면, 골에서는 오목면이므로 '외측/내측'이라는 말은 쓰지 않는다(파이썬 보고서 `fibre` 항목도 +z/−z).
 
 **정의 이름 규칙(생성기)**: 셀 주소와 같은 이름(A11, D66, I1, C1, Z1)과 대소문자만 다른 이름(H_, h_)은 엑셀에서 쓸 수 없어 `A_11`, `H_mid`, `h_calc` 등으로 치환하고, 생성 수식의 셀 참조는 모두 절대형(`$D$22`)으로 써서 이름 치환과 충돌하지 않게 했다.
 

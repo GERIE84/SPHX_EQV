@@ -32,9 +32,11 @@ docs/
   08_method_review_rve_vs_vam.md  방법론 검토: RVE vs VAM, FEA 필요 범위, 응력 복원식 채택
   09_equivalent_thickness.md  등가 두께 정의, FE 입력 방식(GENS) 결정, VAM 응력 복원 구현·검증
   10_calc_module.md       계산 모듈 사용법 (YAML 입력 → 보고서), 전처리·경고 규칙, 하중 케이스, 엑셀 시트(§7)
+  11_parametric_study.md  파라메트릭 스터디: H/p, t/p, R_c/t, β 가 강성·등가 두께·K_t·단위 응답에 미치는 영향
+  param_study/            파라메트릭 케이스별 결과 CSV
   example_report/         가정 기본값 입력에 대한 출력 예 (report.md, results.json, sections.inp)
   fig/                    그림 및 생성 스크립트
-calc/                     계산 모듈: plate_model.py(YAML 입력 → 보고서·JSON·APDL, C-1 진입점), SPHX_EQV_calc.xlsx(현장용 엑셀 시트, 생성기 make_excel_sheet.py), geometry.py(단면 라이브러리), stiffness.py(등가 강성 5모델·채택식), stress_recovery.py(VAM 응력 복원 + Briassoulis 능선식), transform.py(β 회전·영역 조합), equivalent_plate.py(등가 두께·ANSYS GENS APDL 생성), plate_input_template.yaml(입력 템플릿),
+calc/                     계산 모듈: plate_model.py(YAML 입력 → 보고서·JSON·APDL, C-1 진입점), SPHX_EQV_calc.xlsx(현장용 엑셀 시트, 생성기 make_excel_sheet.py), parametric.py(C-3 파라메트릭), geometry.py(단면 라이브러리), stiffness.py(등가 강성 5모델·채택식), stress_recovery.py(VAM 응력 복원 + Briassoulis 능선식), transform.py(β 회전·영역 조합), equivalent_plate.py(등가 두께·ANSYS GENS APDL 생성), plate_input_template.yaml(입력 템플릿),
                           verify_{langsu,ye,xia,briassoulis}_tables.py(문헌 수치 재현 검증)
 fea/                      (예정) 등가 물성치 FE 검증 모델
 ```
@@ -46,6 +48,7 @@ fea/                      (예정) 등가 물성치 FE 검증 모델
 - 2026-09-08: Ye et al. (2014) VAM 등가판 모델 전사·검증, 고전식(Seydel·Briassoulis) 통합 비교표 및 채택식 권고 작성. 국부 변형률 복원식 확보로 응력 평가 접근 방향 갱신.
 - 2026-09-09: B-1 형상 파라미터 정의서(`docs/05`) 및 단면 라이브러리(`calc/geometry.py`) 작성. 실제 판 치수 입력 대기.
 - 2026-09-09: 방법론 검토(`docs/08`) — 강성은 이미 VAM 채택식, 응력 복원도 VAM 복원식을 1차 수단으로 결정. FEA는 검증·비주기 영역용으로 범위 불변.
+- 2026-09-10: C-3 파라메트릭 스터디(`docs/11`). 등가 굽힘 두께는 판 두께와 무관한 형상량, 가로 인장·비틀림 응력 ∝ t⁻², 반경은 2차 인자, β 전 범위에서 굽힘–비틀림 연성 0.9 수준 확인. C단계 종료.
 - 2026-09-10: C-2 엑셀 계산 시트(`calc/SPHX_EQV_calc.xlsx`). 파이썬과 동일 로직(원호+접선, 채택식, 등가 두께, 영역 강성, APDL 문자열, 산·골 응력·판정), 수식 평가로 파이썬 대비 일치 확인.
 - 2026-09-10: C-1 계산 모듈 래핑(`calc/plate_model.py`, `docs/10`). YAML 한 파일로 형상→강성→등가 두께→영역 강성→ANSYS 절→응력 복원·판정까지 보고서 생성. 실제 판 치수 입력 대기.
 - 2026-09-09: B-4 등가 두께·FE 입력 방식·VAM 응력 복원(`docs/09`, `calc/equivalent_plate.py`, `calc/stress_recovery.ye_recovery`). 균질 단일층 불가 확인 → ANSYS preintegrated section 채택; 복원식은 평판 극한·Case 1/5·에너지 일치로 검증. B단계 종료.

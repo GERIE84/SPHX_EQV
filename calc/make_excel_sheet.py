@@ -156,6 +156,8 @@ def build() -> Workbook:
         ("  4. 'Rotation' 시트 하단의 SSPA/SSPD/SSPE/SSPM 문자열을 ANSYS 입력파일에 복사한다 (비틀림 규약은 E-1 확인 전까지 'verify').", F_BASE),
         ("  5. 'Stress' 시트에 판축 또는 국부축 합력을 넣으면 산·골 × +z/−z 면 4개 표면점의 응력과 최대 von Mises, 허용응력 비가 나온다.", F_BASE),
         ("  6. 입력 항목의 위치는 'Input' 시트 오른쪽 그림 1~4 (단면 / 쉐브론·판축 / 하중 / 응력 출력 위치) 를 따른다. 노란 라벨 = 시트 입력 기호.", F_BASE),
+        ("  7. 'Summary' 시트에 경고·강성·등가 두께·하중 케이스·압력차 판정이 한 장으로 모인다. 입력을 바꾼 뒤 이 시트만 봐도 된다.", F_BASE),
+        ("  8. 'Pressure' 시트는 압력차 ΔP 로부터 접촉점 격자 위 판의 응력을 폐형식으로 구한다 (docs/12). 판축 합력 없이 두께 판정이 가능하다.", F_BASE),
         ("", F_BASE),
         ("범위·한계", F_BOLD),
         ("  - 단면은 원호+접선(arc_tangent)만. 사인형/사다리꼴/반원 단면은 파이썬 모듈 사용.", F_BASE),
@@ -166,7 +168,9 @@ def build() -> Workbook:
         ("근거 문서: docs/05 (형상 정의), 06 (채택식 = Ye 2014 Eq. 19), 07 (β 회전), 09 (등가 두께·GENS·VAM 복원), 10 (계산 모듈).", F_BASE),
         ("단위: mm, N, MPa, N/mm (A, N), N·mm/mm (D, M), tonne/mm³ (ρ). 각도 입력은 도(°), 내부 계산은 rad.", F_BASE),
         ("기호: c=p/2, f=H/2, h=t_calc, λ=l/c, J1=I1/(2c), J2=I2/(2c). 국부축 x ⊥ 능선, y ∥ 능선. N=A·{εx,εy,γxy}, M=D·{κx,κy,2κxy}.", F_BASE),
-        ("생성: calc/make_excel_sheet.py (재생성 시 이 파일을 덮어쓴다 — 수정은 생성기에서).", F_NOTE),
+        ("탭 색: 노랑 = 입력(Input), 녹색 = 요약(Summary), 파랑 = 계산, 회색 = 검증·안내. 시트 보호는 걸지 않았다(수식 확인용). 계산 시트의 셀은 편집하지 말 것.", F_BASE),
+        ("", F_BASE),
+        ("생성: calc/make_excel_sheet.py (재생성 시 이 파일을 덮어쓴다 — 수정은 생성기에서).  버전: " + __import__("datetime").date.today().isoformat() + "  파이썬 대조: docs/example_report/results.json", F_NOTE),
     ]
     for i, (t, f) in enumerate(lines, 1):
         rd.cell(row=i, column=1, value=t).font = f
@@ -248,10 +252,10 @@ def build() -> Workbook:
     g.add("c_", "반피치 c = p/2", "=p_/2", "mm")
     g.add("f_", "반깊이 f = H/2", "=H_/2", "mm")
     g.section("원호+접선 단면 해 (모드 A: Newton 반복 / 모드 B: 선형)")
-    g.add("Rc_in", "R_c (모드 A)", "=in_Rc", "mm", kind="link")
-    g.add("Rv_in", "R_v (모드 A)", "=IF(ISBLANK(in_Rv),in_Rc,in_Rv)", "mm", "비우면 R_c")
+    g.add("Rc_in", "R_c (모드 A)", "=IF(ISBLANK(in_Rc),0,in_Rc)", "mm", "비우면 0 (모드 B 에서는 미사용)", kind="link")
+    g.add("Rv_in", "R_v (모드 A)", "=IF(ISBLANK(in_Rv),Rc_in,in_Rv)", "mm", "비우면 R_c")
     g.add("Rs", "R_s = R_c + R_v", "=Rc_in+Rv_in", "mm")
-    g.add("a_hi", "α 상한 (T_L ≥ 0)", "=MIN(ASIN(MIN(1,c_/Rs)),ACOS(MAX(-1,1-H_/Rs)),PI()/2)-0.000001", "rad", "수평식·수직식에서 T_L ≥ 0 이 되는 α 범위의 상한")
+    g.add("a_hi", "α 상한 (T_L ≥ 0)", "=IF(Rs>0,MIN(ASIN(MIN(1,c_/Rs)),ACOS(MAX(-1,1-H_/Rs)),PI()/2)-0.000001,PI()/4)", "rad", "수평식·수직식에서 T_L ≥ 0 이 되는 α 범위의 상한 (R 미입력 시 자리값)")
     g.note("Newton 반복: F(α) = R_s(1−cosα) + (c − R_s sinα)·tanα − H = 0,  F'(α) = (c − R_s sinα)/cos²α.  각 반복값은 (0.001, a_hi) 로 제한.")
     r0 = g.row
     g.cell(r0, 1, "반복 n", F_BOLD, border=True); g.cell(r0, 2, "α_n [rad]", F_BOLD, border=True)
@@ -263,9 +267,9 @@ def build() -> Workbook:
         r = g.row
         g.cell(r, 1, n, F_BASE, border=True)
         if n == 0:
-            g.cell(r, 2, "=MIN(a_hi,MAX(0.001,ATAN(H_/MAX(c_-Rs*0.5,0.001))))", F_BASE, FMT_MM, border=True)
+            g.cell(r, 2, "=IF(Rs>0,MIN(a_hi,MAX(0.001,ATAN(H_/MAX(c_-Rs*0.5,0.001)))),0.5)", F_BASE, FMT_MM, border=True)
         else:
-            g.cell(r, 2, f"=MIN(a_hi,MAX(0.001,$B${r-1}-$C${r-1}/$D${r-1}))", F_BASE, FMT_MM, border=True)
+            g.cell(r, 2, f"=IF(Rs>0,MIN(a_hi,MAX(0.001,$B${r-1}-$C${r-1}/MAX($D${r-1},1E-12))),0.5)", F_BASE, FMT_MM, border=True)
         g.cell(r, 3, f"=Rs*(1-COS($B${r}))+(c_-Rs*SIN($B${r}))*TAN($B${r})-H_", F_BASE, FMT_SCI, border=True)
         g.cell(r, 4, f"=(c_-Rs*SIN($B${r}))/COS($B${r})^2", F_BASE, FMT_MM, border=True)
         g.row += 1
@@ -274,13 +278,14 @@ def build() -> Workbook:
     g.add("alpha_A", "α (모드 A 해)", f"=$B${last}", "rad", "Newton 20회 최종값")
     g.add("resid_A", "잔차 |F(α)| (모드 A)", f"=ABS($C${last})", "mm", "1e-9 이하이면 수렴. 크면 R_c 가 너무 커서 접선 구간이 없음")
     g.add("alpha_B", "α (모드 B 입력)", "=IF(ISBLANK(in_alpha),0,RADIANS(in_alpha))", "rad")
-    g.add("R_B", "R (모드 B: R_c = R_v)", "=IF(alpha_B>0,(c_*SIN(alpha_B)-H_*COS(alpha_B))/(2*(1-COS(alpha_B))),0)", "mm",
+    g.add("R_B", "R (모드 B: R_c = R_v)", "=IF(alpha_B>0.001,(c_*SIN(alpha_B)-H_*COS(alpha_B))/(2*(1-COS(alpha_B))),0)", "mm",
           "2R sinα + T cosα = c,  2R(1−cosα) + T sinα = H  →  det = 2(1−cosα)")
     g.add("alpha", "α (채택)", '=IF(in_mode="B",alpha_B,alpha_A)', "rad")
     g.add("alpha_deg", "α [°]", "=DEGREES(alpha)", "°")
     g.add("Rc", "R_c (채택)", '=IF(in_mode="B",R_B,Rc_in)', "mm")
     g.add("Rv", "R_v (채택)", '=IF(in_mode="B",R_B,Rv_in)', "mm")
-    g.add("TL", "접선(플랭크) 길이 T_L", "=MAX(0,(c_-(Rc+Rv)*SIN(alpha))/COS(alpha))", "mm", "수평식. 반주기당 직선 길이")
+    g.add("TL_raw", "접선 길이 (원시값)", "=IF(alpha>0,(c_-(Rc+Rv)*SIN(alpha))/COS(alpha),0)", "mm", "음수이면 원호 반경이 너무 커서 접선 구간이 없음", FMT_MM)
+    g.add("TL", "접선(플랭크) 길이 T_L", "=MAX(0,TL_raw)", "mm", "수평식. 반주기당 직선 길이")
     g.add("Rmin", "R_min", "=MIN(Rc,Rv)", "mm")
     g.add("chk_geom", "형상 정합 검사 (수직식 잔차)", "=(Rc+Rv)*(1-COS(alpha))+TL*SIN(alpha)-H_", "mm", "0 이어야 함 (모드 A 수렴, 모드 B 물리해 확인)", FMT_SCI)
     g.section("파생량 (docs/05 §3, Lang & Su Eq. 27 일반화)")
@@ -304,12 +309,15 @@ def build() -> Workbook:
     g.section("무차원·경고")
     g.add("Hp", "H/p", "=H_/p_", "")
     g.add("tp", "t/p", "=h_/p_", "")
-    g.add("tR", "t/R_min", "=h_/Rmin", "")
+    g.add("tR", "t/R_min", "=IF(Rmin>0,h_/Rmin,0)", "", "R 미입력 시 0")
     g.add("warn1", "경고: 두께", '=IF(ISBLANK(in_tmin),"t_min 미입력 → 공칭 두께로 계산 (성형 두께 감소 미반영)","-")', "", kind="text")
     g.add("warn2", "경고: t/R_min", '=IF(tR>0.2,"t/R_min > 0.2: 쉘 이론 범위 밖. 능선 응력은 D단계 솔리드 FE 보정 (09 §5)","-")', "", kind="text")
     g.add("warn3", "경고: H/p", '=IF(Hp>1,"H/p > 1: 문헌 검증 범위 밖","-")', "", kind="text")
-    g.add("warn4", "경고: 수렴", '=IF(AND(in_mode="A",resid_A>0.000000001),"모드 A Newton 미수렴: R_c/R_v 가 커서 접선 구간이 없음","-")', "", kind="text")
-    for nm in ("warn1", "warn2", "warn3", "warn4"):
+    g.add("warn4", "경고: 수렴", '=IF(AND(in_mode="A",Rs>0,resid_A>0.000000001),"모드 A Newton 미수렴: R_c/R_v 가 커서 접선 구간이 없음","-")', "", kind="text")
+    g.add("warn5", "입력 누락", '=IF(OR(ISBLANK(in_p),ISBLANK(in_H),ISBLANK(in_t)),"p, H, t 는 필수 입력",IF(AND(in_mode="A",Rc_in<=0),"모드 A: R_c 필수",IF(AND(in_mode="B",alpha_B<=0),"모드 B: α 필수 (0 < α < 90°)","-")))', "", kind="text")
+    g.add("warn6", "입력 범위", '=IF(OR(p_<=0,H_<=0,h_<=0),"p, H, t_calc 는 양수여야 함",IF(H_>=p_,"H ≥ p: 깊이가 피치 이상 — 단면 확인",IF(TL_raw<-0.000001,"T_L < 0: 원호 반경 과대 (R_c+R_v 를 줄이거나 α 입력)",IF(AND(NOT(ISBLANK(in_tmin)),in_tmin>in_t),"t_min > t: 입력 확인",IF(in_CA<0,"CA < 0","-")))))', "", kind="text")
+    g.add("warn7", "β 범위", '=IF(OR(beta_deg<=0,beta_deg>=90),"β 는 0° < β < 90° 이어야 함 (접촉 격자·회전 불가)",IF(OR(beta_deg<20,beta_deg>80),"β 가 통상 범위(20–80°) 밖 — 확인","-"))', "", kind="text")
+    for nm in ("warn1", "warn2", "warn3", "warn4", "warn5", "warn6", "warn7"):
         addr = wb.defined_names[fix_name(nm)].attr_text.split("!")[1].replace("$", "")
         g.ws[addr].fill = FILL_WARN
 
@@ -425,8 +433,8 @@ def build() -> Workbook:
     st.add("CC", "𝒞 = −(12J2/h² + J1)", "=-(12*J2/h_^2+J1)", "", "", FMT_MM)
     st.add("c1", "c1 = −(ε_xx + ν ε_yy)/𝒞", "=-(exx+nu_*eyy)/CC", "", "", FMT_SCI)
     st.add("c4", "c4 = (κ_xx + ν κ_yy)/λ", "=(kxx+nu_*kyy)/lam", "1/mm", "", FMT_SCI)
-    st.add("ch_c", "c_h(산) = 1 + h²/(48R_c²)", "=1+h_^2/(48*Rc^2)", "", "두께 보정")
-    st.add("ch_v", "c_h(골) = 1 + h²/(48R_v²)", "=1+h_^2/(48*Rv^2)", "")
+    st.add("ch_c", "c_h(산) = 1 + h²/(48R_c²)", "=IF(Rc>0,1+h_^2/(48*Rc^2),1)", "", "두께 보정")
+    st.add("ch_v", "c_h(골) = 1 + h²/(48R_v²)", "=IF(Rv>0,1+h_^2/(48*Rv^2),1)", "")
     st.add("inva1", "⟨√a/c_h⟩·2c = 2R_cα/c_h,c + 2T_L + 2R_vα/c_h,v", "=2*Rc*alpha/ch_c+2*TL+2*Rv*alpha/ch_v", "mm", "1주기 적분")
     st.add("alpha1", "α1 = 2c / 위", "=2*c_/inva1", "", "")
     st.add("c2", "c2 = α1 γ_xy", "=alpha1*gxy", "", "", FMT_SCI)
@@ -438,10 +446,10 @@ def build() -> Workbook:
     rows = [
         ("eps_s", "ε_s", "=c1-nu_*(eyy+f_*kyy)", "=c1-nu_*(eyy-f_*kyy)", "γ11/a = c1√a − νa(ε_yy + zκ_yy)"),
         ("eps_y", "ε_y", "=eyy+f_*kyy", "=eyy-f_*kyy", "γ22 = ε_yy + zκ_yy"),
-        ("gam_sy", "γ_sy", "=(c2+h_^2*kxy/(12*Rc))/ch_c", "=(c2-h_^2*kxy/(12*Rv))/ch_v", "2γ12/√a = (√a c2 − h² z'' κ_xy/(12a))/c_h,  z''=∓1/R"),
+        ("gam_sy", "γ_sy", "=(c2+h_^2*kxy/(12*MAX(Rc,1E-9)))/ch_c", "=(c2-h_^2*kxy/(12*MAX(Rv,1E-9)))/ch_v", "2γ12/√a = (√a c2 − h² z'' κ_xy/(12a))/c_h,  z''=∓1/R"),
         ("kap_s", "κ_s", "=12*c1*f_/h_^2+c4-nu_*kyy", "=-12*c1*f_/h_^2+c4-nu_*kyy", "ρ11/a = 12c1 z/h² + c4 − νκ_yy/√a"),
         ("kap_y", "κ_y", "=kyy", "=kyy", "ρ22 = κ_yy/√a"),
-        ("kap_sy2", "2κ_sy", "=(-2*kxy-c2/(2*Rc))/ch_c", "=(-2*kxy+c2/(2*Rv))/ch_v", "2ρ12/√a = (−2√a κ_xy + z'' c2/(2a))/c_h"),
+        ("kap_sy2", "2κ_sy", "=(-2*kxy-c2/(2*MAX(Rc,1E-9)))/ch_c", "=(-2*kxy+c2/(2*MAX(Rv,1E-9)))/ch_v", "2ρ12/√a = (−2√a κ_xy + z'' c2/(2a))/c_h"),
     ]
     for nm, lab, fc, fv, note in rows:
         r = st.row
@@ -513,8 +521,8 @@ def build() -> Workbook:
     pr.add("EI_", "EI = E h³/(12(1−ν²))", "=E_*h_^3/(12*(1-nu_^2))", "N·mm", "단위 폭 스트립, y 평면변형", FMT_K)
     pr.add("EA_", "EA = E h/(1−ν²)", "=E_*h_/(1-nu_^2)", "N/mm", "", FMT_K)
     pr.section("(C) 접촉점 격자와 Hertz 접촉 (1차 추정)")
-    pr.add("a_lat", "접촉점 간격 a = p/sin2β", "=p_/SIN(2*beta)", "mm", "능선을 따라 이웃 판 능선과의 교차 간격", FMT_MM)
-    pr.add("A_cell", "격자 셀 면적 = p²/sin2β", "=p_^2/SIN(2*beta)", "mm²", "", FMT_MM)
+    pr.add("a_lat", "접촉점 간격 a = p/sin2β", "=IF(ABS(SIN(2*beta))>0.000001,p_/SIN(2*beta),0)", "mm", "능선을 따라 이웃 판 능선과의 교차 간격", FMT_MM)
+    pr.add("A_cell", "격자 셀 면적 = p²/sin2β", "=IF(ABS(SIN(2*beta))>0.000001,p_^2/SIN(2*beta),0)", "mm²", "", FMT_MM)
     pr.add("F_c", "접촉력 F = q·A_cell", "=q_p*A_cell", "N", "", FMT_MM)
     pr.add("R_out", "산 외면 반경 R_c + h/2", "=Rc+h_/2", "mm", "접촉은 산–산", FMT_MM)
     pr.add("phi_c", "교차각 φ = 2β", "=2*beta", "rad")
@@ -542,9 +550,9 @@ def build() -> Workbook:
             1: k,
             2: f"=IF($A${r}<={NSEG},1,IF($A${r}<={2*NSEG},2,3))",
             3: f"=($A${r}-{NSEG}*({pc_}-1)-0.5)/{NSEG}*CHOOSE({pc_},R_a*alpha,TL,R_b*alpha)",
-            4: f"=CHOOSE({pc_},R_a*SIN({sl}/R_a),R_a*SIN(alpha)+{sl}*COS(alpha),c_-R_b*SIN(alpha-{sl}/R_b))",
-            5: f"=CHOOSE({pc_},f_-R_a+R_a*COS({sl}/R_a),f_-R_a*(1-COS(alpha))-{sl}*SIN(alpha),-f_+R_b-R_b*COS(alpha-{sl}/R_b))",
-            6: f"=CHOOSE({pc_},-{sl}/R_a,-alpha,-(alpha-{sl}/R_b))",
+            4: f"=CHOOSE({pc_},R_a*SIN({sl}/MAX(R_a,1E-9)),R_a*SIN(alpha)+{sl}*COS(alpha),c_-R_b*SIN(alpha-{sl}/MAX(R_b,1E-9)))",
+            5: f"=CHOOSE({pc_},f_-R_a+R_a*COS({sl}/MAX(R_a,1E-9)),f_-R_a*(1-COS(alpha))-{sl}*SIN(alpha),-f_+R_b-R_b*COS(alpha-{sl}/MAX(R_b,1E-9)))",
+            6: f"=CHOOSE({pc_},-{sl}/MAX(R_a,1E-9),-alpha,-(alpha-{sl}/MAX(R_b,1E-9)))",
             7: f"=CHOOSE({pc_},R_a*alpha,TL,R_b*alpha)/{NSEG}",
             8: f"=$G${r}*COS($F${r})", 9: f"=$G${r}*SIN($F${r})",
             10: f"=q_p*$I${r}", 11: f"=-q_p*$H${r}",
@@ -571,8 +579,8 @@ def build() -> Workbook:
     pr.add("aPP", "a_PP = Σ(MP²wM + NP²wN)", f"=SUM({rng('AC')})", "", "", FMT_SCI)
     pr.add("bP", "b_P = −Σ(MP·M0·wM + NP·N0·wN)", f"=-SUM({rng('AD')})", "", "", FMT_SCI)
     pr.add("det_fr", "det = a_MM·a_PP − a_MP²", "=aMM*aPP-aMP^2", "", "", FMT_SCI)
-    pr.add("Mc_fr", "M_c (x=0 잉여 모멘트)", '=IF(in_inplane="fixed",(bM*aPP-aMP*bP)/det_fr,bM/aMM)', "N·mm/mm", "", FMT_MM)
-    pr.add("P_fr", "P (x=0 수평 추력)", '=IF(in_inplane="fixed",(aMM*bP-aMP*bM)/det_fr,0)', "N/mm", "free → 0", FMT_MM)
+    pr.add("Mc_fr", "M_c (x=0 잉여 모멘트)", '=IF(aMM<=0,0,IF(in_inplane="fixed",(bM*aPP-aMP*bP)/det_fr,bM/aMM))', "N·mm/mm", "", FMT_MM)
+    pr.add("P_fr", "P (x=0 수평 추력)", '=IF(aMM<=0,0,IF(in_inplane="fixed",(aMM*bP-aMP*bM)/det_fr,0))', "N/mm", "free → 0", FMT_MM)
     pr.section("(A) 끝점 정확값 — 하중 쪽 능선 (x=0) 과 지지선 (x=c)")
     pr.add("SFx", "ΣFx", f"=SUM({rng('J')})", "N/mm", "", FMT_SCI)
     pr.add("SFz", "ΣFz", f"=SUM({rng('K')})", "N/mm", "(= −q·c)", FMT_MM)
@@ -685,6 +693,55 @@ def build() -> Workbook:
         ck.add(None, "판정 (압력)", '=IF(chk_max_p<0.002,"일치","불일치")', "", "", kind="text")
     ck.note("참조값은 calc/plate_model.py 실행 결과(docs/example_report/results.json)를 생성 시점에 복사한 하드코딩 값이다 (파랑).")
 
+    # ------------------------------------------------------------------ Summary (결과 요약; 모두 다른 시트 참조)
+    sm = SheetBuilder(wb, "Summary", "결과 요약 — 모든 값은 다른 시트 참조 (편집 금지)", (36, 20, 14, 80))
+    sm.section("판·입력 요약")
+    sm.add(None, "판 식별자", "=in_id", "", kind="link")
+    sm.add(None, "단면 p / H / t_calc", '=TEXT(p_,"0.00")&" / "&TEXT(H_,"0.00")&" / "&TEXT(h_,"0.000")&" mm"', "", "전처리 후 값", kind="link")
+    sm.add(None, "플랭크 각 α / T_L", '=TEXT(alpha_deg,"0.0")&"° / "&TEXT(TL,"0.00")&" mm"', "", kind="link")
+    sm.add(None, "쉐브론 각 β (유동축 기준)", "=beta_deg", "°", kind="link")
+    sm.add(None, "재료 E / ν", '=TEXT(E_,"#,##0")&" MPa / "&TEXT(nu_,"0.00")', "", kind="link")
+    sm.section("경고 (Geometry 시트)")
+    for i in range(1, 8):
+        sm.add(None, f"경고 {i}", f"=warn{i}", "", kind="link")
+    sm.section("채택식 등가 강성 (국부축)")
+    for k, unit in (("A11", "N/mm"), ("A12", "N/mm"), ("A22", "N/mm"), ("A66", "N/mm"), ("D11", "N·mm"), ("D12", "N·mm"), ("D22", "N·mm"), ("D66", "N·mm")):
+        sm.add(None, k, f"={k}", unit, "", FMT_K, kind="link")
+    sm.add(None, "A22/A11 (직교이방성 비)", "=A22/A11", "", "", FMT_K, kind="link")
+    sm.section("등가 두께·응력집중")
+    sm.add(None, "t_b (굽힘–막 정합)", "=t_b", "mm", "", FMT_MM, kind="link")
+    sm.add(None, "t_s = hλ (전단·질량)", "=t_s", "mm", "", FMT_MM, kind="link")
+    sm.add(None, "K_t = 1 + 6f/t", "=Kt", "", "", FMT_MM, kind="link")
+    sm.section("하중 케이스 (Stress 시트)")
+    sm.add(None, "케이스", "=lc_name", "", kind="link")
+    sm.add(None, "최대 von Mises", "=vm_max", "MPa", "", FMT_K, kind="link")
+    sm.add(None, "위치", "=vm_where", "", kind="link")
+    sm.add(None, "허용 / 비 / 판정", '=IF(allow_>0,TEXT(allow_,"0")&" MPa / "&TEXT(ratio_,"0.00")&" / "&verdict,verdict)', "", kind="link")
+    sm.section("압력차 케이스 (Pressure 시트)")
+    sm.add(None, "ΔP / 고압면 / 면내 구속", '=TEXT(q_p,"0.00")&" MPa / "&in_face&" / "&in_inplane', "", kind="link")
+    sm.add(None, "접촉 간격 a / 접촉력 F", '=TEXT(a_lat,"0.00")&" mm / "&TEXT(F_c,"0.0")&" N"', "", kind="link")
+    sm.add(None, "프레임 M 지지선", "=M_sp", "N·mm/mm", "", FMT_MM, kind="link")
+    sm.add(None, "최대 von Mises", "=pvm_max", "MPa", "", FMT_K, kind="link")
+    sm.add(None, "위치", "=pvm_where", "", kind="link")
+    sm.add(None, "허용 / 비 / 판정", '=IF(p_allow>0,TEXT(p_allow,"0")&" MPa / "&TEXT(p_ratio,"0.00")&" / "&p_verdict,p_verdict)', "", kind="link")
+    sm.add(None, "Hertz 접촉압 p0", "=p0_h", "MPa", "p0 > 1.6·항복강도 → 접촉점 국부 항복", FMT_K, kind="link")
+    sm.section("검증 (Check 시트, 기본값 입력에서만 유효)")
+    sm.add(None, "기본 항목 최대 상대오차", "=chk_max", "", "", FMT_SCI, kind="link")
+    sm.add(None, "압력 항목 최대 상대오차", "=chk_max_p", "", "", FMT_SCI, kind="link")
+    wb.move_sheet("Summary", offset=-(len(wb.sheetnames) - 2))      # README 다음
+    # ------------------------------------------------------------------ 마무리 서식: 틀 고정, 탭 색, 비고 열 줄바꿈, 확대
+    tabs = {"README": "808080", "Summary": "00B050", "Input": "FFC000", "Geometry": "4472C4", "Stiffness": "4472C4", "Rotation": "4472C4",
+            "Stress": "4472C4", "Pressure": "4472C4", "Check": "A6A6A6"}
+    for ws_ in wb.worksheets:
+        ws_.sheet_properties.tabColor = tabs.get(ws_.title, "4472C4")
+        ws_.sheet_view.zoomScale = 90
+        if ws_.title not in ("README",):
+            ws_.freeze_panes = "A3"
+        if ws_.title in ("Geometry", "Stiffness", "Rotation", "Stress", "Summary", "Input"):
+            for row in ws_.iter_rows(min_col=4, max_col=4):
+                for c in row:
+                    if isinstance(c.value, str) and len(c.value) > 60:
+                        c.alignment = Alignment(wrap_text=True, vertical="top")
     lowered = {}
     for nm in wb.defined_names.keys():
         lowered.setdefault(nm.lower(), []).append(nm)
@@ -754,6 +811,77 @@ def recalc_and_verify(path: str) -> None:
     assert abs(alpha_deg - 44.30459982548396) < 1e-9 and abs(tb - 3.7341051493604263) < 1e-9
     assert abs(ss_in / (10 / 0.6) - 17.0) < 1e-6 and abs(vm / 252.75037359510597 - 1) < 1e-4 and verdict == "NG"  # 파이썬은 800점 표본, 엑셀은 정확한 산 위치
     print("scenario2 OK")
+    # 시나리오 3: 기본값이 아닌 입력 조합으로 모든 분기(outer/axis/horizontal, R_c≠R_v, t_min·CA, plate/left 하중, 골 고압면·fixed)를 파이썬과 독립 대조
+    sys.path.insert(0, HERE)
+    import numpy as np
+    from geometry import arc_tangent as _at
+    from stiffness import Sheet as _Sheet, adopted as _adopted
+    from transform import zone_stiffness as _zs, resultants_to_local as _r2l
+    from stress_recovery import ye_recovery as _yr
+    from pressure_resultants import pressure_case as _pc
+    from equivalent_plate import equivalent_thicknesses as _eth
+    S3 = dict(p_in=14.0, H_in=3.9, t=0.6, Rc=1.3, Rv=1.6, beta_in=40.0, E=190000.0, nu=0.29, tmin=0.55, CA=0.02,
+              N=[5.0, -3.0, 2.0], M=[4.0, 20.0, -6.0], allow=150.0, dP=0.8)
+    beta = 90 - S3["beta_in"]; p3 = S3["p_in"] * math.cos(math.radians(beta)); H3 = S3["H_in"] - S3["t"]; h3 = S3["tmin"] - S3["CA"]
+    wbf = load_workbook(path); ws = wbf["Input"]
+    def setn(name, val):
+        a = wbf.defined_names[fix_name(name)].attr_text.split("!")[1].replace("$", ""); ws[a] = val
+    for k, v in (("in_p", S3["p_in"]), ("in_H", S3["H_in"]), ("in_t", S3["t"]), ("in_mode", "A"), ("in_Rc", S3["Rc"]), ("in_Rv", S3["Rv"]), ("in_alpha", None),
+                 ("in_dims", "outer"), ("in_pitchref", "axis"), ("in_beta", S3["beta_in"]), ("in_betaref", "horizontal"), ("in_E", S3["E"]), ("in_nu", S3["nu"]),
+                 ("in_tmin", S3["tmin"]), ("in_CA", S3["CA"]), ("in_Sallow", S3["allow"]), ("lc_axes", "plate"), ("lc_zone", "left"),
+                 ("lc_Nx", S3["N"][0]), ("lc_Ny", S3["N"][1]), ("lc_Nxy", S3["N"][2]), ("lc_Mx", S3["M"][0]), ("lc_My", S3["M"][1]), ("lc_Mxy", S3["M"][2]), ("lc_allow", None),
+                 ("in_dP", S3["dP"]), ("in_face", "valley"), ("in_inplane", "fixed")):
+        setn(k, v)
+    tmp = os.path.join(outdir, "scenario3.xlsx"); wbf.save(tmp)
+    xl3 = formulas.ExcelModel().loads(tmp).finish(); xl3.calculate(); xl3.write(dirpath=os.path.join(outdir, "s3"))
+    wv = load_workbook(os.path.join(outdir, "s3", "SCENARIO3.XLSX"), data_only=True)
+    def getn(name):
+        sh, a = wbf.defined_names[fix_name(name)].attr_text.split("!"); return wv[sh.strip("'").upper()][a.replace("$", "")].value
+    # 파이썬 참조
+    g3 = _at(p3, H3, h3, R_c=S3["Rc"], R_v=S3["Rv"]); m3 = _Sheet(S3["E"], S3["nu"]); K3 = _adopted(g3, m3); Z3 = _zs(K3, beta, "left"); th3 = _eth(K3, g3)
+    Nl, Ml = _r2l(np.array(S3["N"]), beta, "left"), _r2l(np.array(S3["M"]), beta, "left")
+    A = np.array([[K3["A11"], K3["A12"], 0], [K3["A12"], K3["A22"], 0], [0, 0, K3["A66"]]]); D = np.array([[K3["D11"], K3["D12"], 0], [K3["D12"], K3["D22"], 0], [0, 0, K3["D66"]]])
+    e, k = np.linalg.solve(A, Nl), np.linalg.solve(D, Ml)
+    r3 = _yr(g3, m3, dict(exx=e[0], eyy=e[1], gxy=e[2], kxx=k[0], kyy=k[1], kxy=k[2] / 2), n=2000)
+    ic, iv = int(np.argmax(r3.z)), int(np.argmin(r3.z)); vm4 = max(r3.vm[0, ic], r3.vm[1, ic], r3.vm[0, iv], r3.vm[1, iv])
+    pc3 = _pc(g3, m3, S3["dP"], beta, "-z", "fixed")
+    pairs = [("beta_deg", beta, 1e-9), ("p_", p3, 1e-9), ("H_", H3, 1e-9), ("h_", h3, 1e-9), ("alpha_deg", g3.extra["alpha_deg"], 1e-7), ("TL", g3.extra["T_L"], 1e-7),
+             ("A11", K3["A11"], 1e-7), ("D22", K3["D22"], 1e-7), ("t_b", th3["t_b"], 1e-7), ("A16_L", Z3["A16"], 1e-7), ("D26_L", Z3["D26"], 1e-7),
+             ("Nx", Nl[0], 1e-9), ("Mxy", Ml[2], 1e-9), ("vm_max", vm4, 2e-3),
+             ("M_sp", pc3.frame_M_support, 3e-3), ("P_fr", pc3.frame.P, 3e-3), ("pvm_max", pc3.max_vm, 3e-3), ("p0_h", pc3.contact["p0"], 1e-6)]
+    worst3 = 0.0
+    for name, ref, tol in pairs:
+        got = getn(name); rel = abs(got / ref - 1) if abs(ref) > 1e-12 else abs(got - ref)
+        flag = "OK " if rel < tol else "BAD"; worst3 = max(worst3, rel / tol)
+        print(f"  [{flag}] s3 {name:10s} excel={got:14.6g} python={ref:14.6g} rel={rel:.1e}")
+    print("scenario3", "OK" if worst3 < 1 else "MISMATCH", f"(verdict={getn('verdict')}, p_verdict={getn('p_verdict')}, warn6={getn('warn6')})")
+    if worst3 >= 1:
+        sys.exit(1)
+    # 시나리오 4: 빈 입력 내성 — 모드 B + R_c 비움 + ΔP 비움 + 허용응력 비움: 오류 셀 없이 경고 문구만 나와야 함
+    wbf = load_workbook(path); ws = wbf["Input"]
+    for k, v in (("in_mode", "B"), ("in_Rc", None), ("in_Rv", None), ("in_alpha", 44.0), ("in_dP", None), ("in_Sallow", None), ("lc_allow", None)):
+        setn(k, v)
+    tmp = os.path.join(outdir, "scenario4.xlsx"); wbf.save(tmp)
+    xl4 = formulas.ExcelModel().loads(tmp).finish(); xl4.calculate(); xl4.write(dirpath=os.path.join(outdir, "s4"))
+    wv = load_workbook(os.path.join(outdir, "s4", "SCENARIO4.XLSX"), data_only=True)
+    errs4 = [f"{w.title}!{c.coordinate}={c.value}" for w in wv.worksheets if w.title != "CHECK" for row in w.iter_rows() for c in row
+             if isinstance(c.value, str) and c.value.startswith("#")]
+    print(f"scenario4 (mode B, blank R_c/dP/S_allow): error cells outside Check = {len(errs4)} {errs4[:6]};  alpha={getn('alpha_deg'):.3f} R_B={getn('R_B'):.4f} "
+          f"warn5={getn('warn5')} p_verdict={getn('p_verdict')} verdict={getn('verdict')}")
+    if errs4:
+        sys.exit(1)
+    # 시나리오 5: 모드 A 에서 R_c 비움 → 경고만, 오류 없음  (이미지가 있는 워크북은 저장 후 재사용 불가 → 다시 로드)
+    wbf = load_workbook(path); ws = wbf["Input"]
+    for k, v in (("in_mode", "A"), ("in_Rc", None), ("in_Rv", None), ("in_alpha", None), ("in_dP", None), ("in_Sallow", None), ("lc_allow", None)):
+        setn(k, v)
+    tmp = os.path.join(outdir, "scenario5.xlsx"); wbf.save(tmp)
+    xl5 = formulas.ExcelModel().loads(tmp).finish(); xl5.calculate(); xl5.write(dirpath=os.path.join(outdir, "s5"))
+    wv = load_workbook(os.path.join(outdir, "s5", "SCENARIO5.XLSX"), data_only=True)
+    errs5 = [f"{w.title}!{c.coordinate}={c.value}" for w in wv.worksheets if w.title != "CHECK" for row in w.iter_rows() for c in row
+             if isinstance(c.value, str) and c.value.startswith("#")]
+    print(f"scenario5 (mode A, blank R_c): error cells outside Check = {len(errs5)} {errs5[:6]};  warn5={getn('warn5')}")
+    if errs5:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

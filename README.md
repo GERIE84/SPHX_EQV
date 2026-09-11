@@ -14,6 +14,7 @@
 - **용도 우선순위**: 1순위 사전 강도계산(수식/엑셀) → 2순위 대형 조립체 FE에서의 판 치환.
 - **대상 범위**: 단일 판을 먼저 다루고, 교차 적층 스택(판 간 접촉 포함)은 확장 단계로 미룬다.
 - **진행 방식**: 문헌조사가 어느 정도 정리된 뒤 이후 작업(수식 구현, 해석 자동화)은 Claude Code로 이관한다.
+- **FEA 미사용 (2026-09-11)**: 당분간 유한요소해석을 쓰지 않는다. D·E 단계는 보류하고, 압력차로부터 합력·응력을 구하는 폐형식(C-4, `docs/12`)으로 1순위 목표를 FEA 없이 완결한다. 채택식 근거는 문헌 FE 벤치마크로 갈음한다.
 - **기준 문헌**: Lang & Su, *Equivalent orthotropic model for corrugated plates based on simplified constitutive relation*, Heliyon (2022) — 등가 직교이방성 모델의 출발점으로 삼는다.
 
 ## 저장소 구성
@@ -33,10 +34,11 @@ docs/
   09_equivalent_thickness.md  등가 두께 정의, FE 입력 방식(GENS) 결정, VAM 응력 복원 구현·검증
   10_calc_module.md       계산 모듈 사용법 (YAML 입력 → 보고서), 전처리·경고 규칙, 하중 케이스, 엑셀 시트(§7)
   11_parametric_study.md  파라메트릭 스터디: H/p, t/p, R_c/t, β 가 강성·등가 두께·K_t·단위 응답에 미치는 영향
+  12_pressure_closed_form.md  압력차 폐형식 (C-4): 접촉점 격자, 주름 단면 곡선 프레임, 능선 연속보, Hertz 접촉, 8점 중첩
   param_study/            파라메트릭 케이스별 결과 CSV
   example_report/         가정 기본값 입력에 대한 출력 예 (report.md, results.json, sections.inp)
   fig/                    그림 및 생성 스크립트
-calc/                     계산 모듈: plate_model.py(YAML 입력 → 보고서·JSON·APDL, C-1 진입점), SPHX_EQV_calc.xlsx(현장용 엑셀 시트, 생성기 make_excel_sheet.py), parametric.py(C-3 파라메트릭), geometry.py(단면 라이브러리), stiffness.py(등가 강성 5모델·채택식), stress_recovery.py(VAM 응력 복원 + Briassoulis 능선식), transform.py(β 회전·영역 조합), equivalent_plate.py(등가 두께·ANSYS GENS APDL 생성), plate_input_template.yaml(입력 템플릿),
+calc/                     계산 모듈: plate_model.py(YAML 입력 → 보고서·JSON·APDL, C-1 진입점), SPHX_EQV_calc.xlsx(현장용 엑셀 시트, 생성기 make_excel_sheet.py), parametric.py(C-3 파라메트릭), pressure_resultants.py(C-4 압력차 폐형식), geometry.py(단면 라이브러리), stiffness.py(등가 강성 5모델·채택식), stress_recovery.py(VAM 응력 복원 + Briassoulis 능선식), transform.py(β 회전·영역 조합), equivalent_plate.py(등가 두께·ANSYS GENS APDL 생성), plate_input_template.yaml(입력 템플릿),
                           verify_{langsu,ye,xia,briassoulis}_tables.py(문헌 수치 재현 검증)
 fea/                      (예정) 등가 물성치 FE 검증 모델
 ```
@@ -48,6 +50,7 @@ fea/                      (예정) 등가 물성치 FE 검증 모델
 - 2026-09-08: Ye et al. (2014) VAM 등가판 모델 전사·검증, 고전식(Seydel·Briassoulis) 통합 비교표 및 채택식 권고 작성. 국부 변형률 복원식 확보로 응력 평가 접근 방향 갱신.
 - 2026-09-09: B-1 형상 파라미터 정의서(`docs/05`) 및 단면 라이브러리(`calc/geometry.py`) 작성. 실제 판 치수 입력 대기.
 - 2026-09-09: 방법론 검토(`docs/08`) — 강성은 이미 VAM 채택식, 응력 복원도 VAM 복원식을 1차 수단으로 결정. FEA는 검증·비주기 영역용으로 범위 불변.
+- 2026-09-11: FEA 미사용 결정 반영(D·E 보류). C-4 압력차 폐형식(`docs/12`, `calc/pressure_resultants.py`, 엑셀 Pressure 시트): 1피치 스팬은 균질화 판이 아닌 단면 곡선 프레임으로 풀어야 함을 확인(균질화 시 2~3배 과소). 기본값 판 156.6 MPa per MPa ΔP.
 - 2026-09-10: C-3 파라메트릭 스터디(`docs/11`). 등가 굽힘 두께는 판 두께와 무관한 형상량, 가로 인장·비틀림 응력 ∝ t⁻², 반경은 2차 인자, β 전 범위에서 굽힘–비틀림 연성 0.9 수준 확인. C단계 종료.
 - 2026-09-10: C-2 엑셀 계산 시트(`calc/SPHX_EQV_calc.xlsx`). 파이썬과 동일 로직(원호+접선, 채택식, 등가 두께, 영역 강성, APDL 문자열, 산·골 응력·판정), 수식 평가로 파이썬 대비 일치 확인.
 - 2026-09-10: C-1 계산 모듈 래핑(`calc/plate_model.py`, `docs/10`). YAML 한 파일로 형상→강성→등가 두께→영역 강성→ANSYS 절→응력 복원·판정까지 보고서 생성. 실제 판 치수 입력 대기.

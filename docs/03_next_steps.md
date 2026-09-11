@@ -41,7 +41,13 @@
 - [x] 파라메트릭 스터디 (β, H/p, t/p, R_c/t) — 2026-09-10 `calc/parametric.py`, `docs/11_parametric_study.md`, `docs/param_study/*.csv`, `docs/fig/param_*.png`
   - [x] $K_t = 1+6f/t$ 및 $A_{22}/A_{11}$ 비의 $f/t$, $H/p$ 의존성 포함 — 결론: $t_b$는 두께와 무관한 형상량, $N_x$·$M_{xy}$ 응력 ∝ $t^{-2}$, 반경은 2차 인자, $\bar D_{16}$ 연성 0.9 수준으로 16/26 항 필수
 
-## D. 단일 판 상세 FE 검증 (`fea/`)
+## C-4. 압력차 → 합력·응력 폐형식 (FEA 미사용 경로)
+- [x] 접촉점 격자($a=p/\sin2\beta$), 주름 단면 곡선 프레임(Castigliano, free/fixed), 능선 방향 연속보, Hertz 접촉, 8점 중첩·판정 — 2026-09-11 `calc/pressure_resultants.py`, `docs/12_pressure_closed_form.md`; `plate_model` §7b(`loads.dP_max`), 엑셀 `Pressure` 시트(60분할, 파이썬 대비 5e-4)
+- [ ] 실제 $\Delta P$·허용응력 입력 후 두께 판정 (기본값 형상: 156.6 MPa per MPa, free)
+- [ ] apex·테두리·t/R 미보정분에 대한 안전율 정책 문서화 (FEA 대체)
+- [ ] 포트·열·볼트 하중의 판축 합력 산정 방법 (필요 시)
+
+## D. 단일 판 상세 FE 검증 (`fea/`)  **[보류 — 2026-09-11 FEA 미사용 결정]**
 - [ ] 쉐브론 단위 셀/단일 판 상세 쉘 모델 구축 (ANSYS APDL, 파라메트릭)
   - [ ] 일방향 주름 단위셀(Dirichlet BC, Xia Table 1 방식)로 등가 강성 산출 루틴 검증 → 쉐브론 단위셀로 확장
   - [ ] 전체 판 굽힘 해석으로 $D_{22}$ 상한 문제(Xia vs Lang & Su/Ye) 재현 확인
@@ -53,7 +59,7 @@
   - [ ] Briassoulis $K_t$·Ye 복원식으로 계산한 국부 응력과 상세 FE 응력 비교 (일방향 주름 단위셀 → 쉐브론 꺾임부 보정)
   - [ ] $t/R_{min}>0.2$ 형상은 솔리드 요소로 두께 방향 응력 분포 확인 (일방향 주름 단위 셀 → 쉐브론 꺾임부 보정)
 
-## E. 등가 물성치 FE 적용
+## E. 등가 물성치 FE 적용  **[보류 — 동일. `sections.inp`·APDL 문자열은 재개 시 그대로 사용]**
 - [ ] 직교이방성 쉘 등가 평판 모델 구축 및 상세 모델과 변위·반력 비교
   - [ ] zone-wise 이방성(16/26 포함) 입력 방식 확정 (preintegrated section vs 회전 층상 쉘)
   - [ ] apex 경계의 전단·비틀림 구속 정도 확인 (Strip vs zone-wise 사이 실제 위치, 07 §4.2)

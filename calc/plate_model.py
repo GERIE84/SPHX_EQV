@@ -37,6 +37,7 @@ from transform import zone_stiffness, chevron_homogenized, resultants_to_local, 
 from equivalent_plate import (equivalent_thicknesses, homogeneous_orthotropic, transverse_shear_estimate,
                               mass_per_area, chevron_gens_deck)  # noqa: E402
 from stress_recovery import ye_recovery, recovery_from_resultants, kt_x_tension, RecoveryResult  # noqa: E402
+from pressure_resultants import pressure_case  # noqa: E402
 
 try:
     import yaml
@@ -66,6 +67,7 @@ class PreparedInput:
     notes: List[str] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
     load_cases: List[Dict[str, Any]] = field(default_factory=list)
+    pressure_cases: List[Dict[str, Any]] = field(default_factory=list)   # C-4: loads 블록에서 생성 (dP_max, P_test)
 
 
 def _g(d: Optional[dict], k: str, default=None):
@@ -101,10 +103,22 @@ def prepare(raw: Dict[str, Any]) -> PreparedInput:
         notes.append("밀도 미입력 → 7.9e-9 tonne/mm³ (스테인리스) 가정")
     if _g(mat, "T_design") is not None and _g(mat, "E_source") is None:
         warns.append(f"설계온도 {mat['T_design']} °C 입력됨 — E={mat['E']:g} MPa 가 해당 온도 값인지 확인")
+    loads = raw.get("loads") or {}
+    face_map = {"crest": "+z", "+z": "+z", "valley": "-z", "-z": "-z", "−z": "-z"}
+    pcases = []
+    if _g(loads, "dP_max") is not None:
+        face = face_map.get(str(_g(loads, "high_pressure_face", "crest")), "+z")
+        if _g(loads, "high_pressure_face") is None:
+            warns.append("high_pressure_face 미입력 → 고압면을 산 쪽(+z)으로 가정 (R_c=R_v 이면 결과 동일)")
+        ip = str(_g(loads, "inplane_restraint", "free"))
+        pcases.append(dict(name="design dP_max", dP=float(loads["dP_max"]), face=face, inplane=ip, allowable=_g(mat, "S_allow")))
+        if _g(loads, "P_test") is not None:
+            pcases.append(dict(name="hydrotest P_test (one side)", dP=float(loads["P_test"]), face=face, inplane=ip,
+                               allowable=_g(loads, "S_allow_test", _g(mat, "S_allow"))))
     return PreparedInput(raw=raw, plate_id=str(_g(raw.get("meta"), "plate_id", "plate")), profile=sec["profile"], p=p, H=H,
                          t_nominal=t_nom, t_calc=t_calc, section_kw=kw, beta_deg=beta, E=float(mat["E"]), nu=float(mat["nu"]),
                          rho=rho, S_allow=_g(mat, "S_allow"), notes=notes, warnings=warns,
-                         load_cases=list(raw.get("load_cases") or []))
+                         load_cases=list(raw.get("load_cases") or []), pressure_cases=pcases)
 
 
 # ============================================================================= 계산
@@ -153,6 +167,12 @@ class PlateModel:
         self.kt = kt_x_tension(self.g.f, self.g.h)
         self.unit_response = self._unit_response()
         self.load_results = [self._load_case(lc) for lc in inp.load_cases]
+        self.pressure_results = []
+        for pc in inp.pressure_cases:
+            try:
+                self.pressure_results.append(self._pressure_case(pc))
+            except ValueError as e:
+                inp.warnings.append(f"압력차 케이스 '{pc['name']}' 생략: {e}")
         self.warnings = list(inp.warnings) + self._range_checks()
 
     # --- 검사
@@ -203,6 +223,24 @@ class PlateModel:
                               s["ridge_sig_s"], s["ridge_sig_y"], s["ridge_tau"], s["ridge_N_s"], s["ridge_N_y"], s["ridge_M_s"], s["ridge_M_y"],
                               vm_m, allow, ratio, verdict)
 
+    # --- 압력차 케이스 (C-4, pressure_resultants)
+    def _pressure_case(self, pc: Dict[str, Any]) -> Dict[str, Any]:
+        r = pressure_case(self.g, self.m, pc["dP"], self.inp.beta_deg, pc["face"], pc["inplane"])
+        allow = pc.get("allowable")
+        out = dict(name=pc["name"], dP=pc["dP"], face=pc["face"], inplane=pc["inplane"],
+                   lattice=r.lattice, contact=r.contact,
+                   frame=dict(M_loaded=r.frame_M_loaded, M_support=r.frame_M_support, N_loaded=r.frame_N_loaded, N_support=r.frame_N_support,
+                              P_thrust=r.frame.P, sig_max=r.homogenized_Mx_check["frame_sig_max"]),
+                   homogenized_D11_beam_vm=dict(mid=r.homogenized_Mx_check["vm_max_mid"], support=r.homogenized_Mx_check["vm_max_support"]),
+                   ridge_beam=r.ridge, table=r.table, max_vm=r.max_vm, max_where=r.max_where,
+                   allowable=allow, ratio=(r.max_vm / allow) if allow else None,
+                   verdict=None if not allow else ("OK" if r.max_vm <= allow else "NG"))
+        # 반대 면내 구속 조건 (범위 표시)
+        other = "fixed" if pc["inplane"] == "free" else "free"
+        r2 = pressure_case(self.g, self.m, pc["dP"], self.inp.beta_deg, pc["face"], other, n=400)
+        out["max_vm_other_restraint"] = dict(inplane=other, max_vm=r2.max_vm)
+        return out
+
     # --- 출력
     def results(self) -> Dict[str, Any]:
         i = self.inp
@@ -222,7 +260,8 @@ class PlateModel:
             homogenized={n: {k: float(v.get(k, 0.0)) for k in KEYS_A + KEYS_D} for n, v in self.homogenized.items()},
             fe_input=dict(method="ANSYS preintegrated general shell section (SECTYPE,,GENS)", transverse_shear=self.E_ts,
                           dens_unit_thickness=self.dens_area, twist_convention="to verify (E-1)"),
-            stress=dict(K_t_ridge=self.kt, unit_response=self.unit_response, load_cases=[asdict(r) for r in self.load_results]),
+            stress=dict(K_t_ridge=self.kt, unit_response=self.unit_response, load_cases=[asdict(r) for r in self.load_results],
+                        pressure_cases=self.pressure_results),
             warnings=self.warnings,
         )
 
@@ -304,10 +343,31 @@ class PlateModel:
                 a(f"| {r.name} | {r.ridge_sig_s[0]:.3g} / {r.ridge_sig_s[1]:.3g} | {r.ridge_sig_y[0]:.3g} / {r.ridge_sig_y[1]:.3g} | "
                   f"{r.ridge_tau[0]:.3g} / {r.ridge_tau[1]:.3g} | {r.ridge_N_s:.4g} | {r.ridge_N_y:.4g} | {r.ridge_M_s:.4g} | {r.ridge_M_y:.4g} |")
             a("\n판정은 선형 복원 응력(막+굽힘, 1차 국부)의 von Mises 대 허용응력 단순 비교이며, apex·테두리·포트 보정계수(D단계)와 t/R 보정은 포함하지 않는다.")
+        if self.pressure_results:
+            a("\n## 7b. 압력차 케이스 — 접촉점 격자 위의 판 (C-4, docs/12)\n")
+            a("하중 경로: (A) 한 피치 폭 주름 단면의 곡선 프레임(지지선 = 고압면 반대쪽 능선), (B) 지지선 위 접촉점 간격 a 의 능선 방향 연속보, (C) 접촉점 Hertz. (A)+(B) 를 산·골 × ±z 면 × (접촉점, 스팬 중앙) 8점에서 중첩.\n")
+            a("| 케이스 | ΔP [MPa] | 고압면 | 면내 구속 | 접촉 간격 a [mm] | 접촉력 F [N] | 프레임 M 지지선 [N·mm/mm] | 프레임 σ_max [MPa] | max σ_vM [MPa] | 위치 | 허용 | 비 | 판정 |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+            for r in self.pressure_results:
+                allow_s = "-" if r["allowable"] is None else f"{r['allowable']:g}"
+                ratio_s = "-" if r["ratio"] is None else f"{r['ratio']:.2f}"
+                F_s = f"{r['contact']['F']:.1f}" if r["contact"] else "-"
+                a(f"| {r['name']} | {r['dP']:g} | {r['face']} | {r['inplane']} | {r['lattice']['a']:.2f} | {F_s} | {r['frame']['M_support']:.3f} | {r['frame']['sig_max']:.1f} | "
+                  f"{r['max_vm']:.1f} | {r['max_where']} | {allow_s} | {ratio_s} | {r['verdict'] or '-'} |")
+            for r in self.pressure_results:
+                a(f"\n**{r['name']}** — 8점 중첩 (σ_s = 프레임 + 능선보, σ_y = ν·프레임 + 능선보):\n")
+                a("| 위치 x | 위치 y | 면 | σ_s 프레임 | σ_s 능선보 | σ_s | σ_y | τ | σ_vM |\n|---|---|---|---|---|---|---|---|---|")
+                for t_ in r["table"]:
+                    a(f"| {t_['x_pos']} | {t_['y_pos']} | {t_['face']} | {t_['sig_s_frame']:.1f} | {t_['sig_s_ridge']:.1f} | {t_['sig_s']:.1f} | {t_['sig_y']:.1f} | {t_['tau']:.1f} | {t_['vm']:.1f} |")
+                o = r["max_vm_other_restraint"]
+                a(f"\n- 면내 구속을 {o['inplane']} 로 바꾸면 max σ_vM = {o['max_vm']:.1f} MPa (free = 거시 N_x = 0, 굽힘 지배; fixed = 아치 작용, 하한). 실제는 두 값 사이이며 free 를 설계값으로 쓴다.")
+                a(f"- 균질화 D11 연속보 근사(스팬 p)로 같은 문제를 풀면 VAM 최대 σ_vM {r['homogenized_D11_beam_vm']['mid']:.1f}/{r['homogenized_D11_beam_vm']['support']:.1f} MPa (중앙/지지) — 프레임 해 {r['frame']['sig_max']:.1f} MPa 를 크게 과소평가하므로 1피치 스팬에는 균질화 판을 쓰지 않는다.")
+                c_ = r["contact"]
+                if c_:
+                    a(f"- 접촉점: F = {c_['F']:.1f} N, 교차각 {c_['crossing_deg']:g}°, 외면 반경 {c_['R_outer']:.2f} mm → Hertz p0 = {c_['p0']:.0f} MPa (반타원 평균 반축 {c_['c_mean_semi_axis']:.3f} mm). p0 > 1.6·항복강도 이면 접촉점 국부 항복(접촉부 평탄화) — 통상적 현상이나 피로·마모 검토 항목.")
         a("\n## 8. 한계\n")
         a("- 판 본체(주기 영역) 전용. apex·테두리·포트·용접부는 상세 FE 보정계수 필요 (docs/08 §2).")
         a("- 선형 탄성, Kirchhoff 등가 판. 국부 좌굴·접촉·소성은 범위 밖.")
-        a("- 판축 합력은 사용자가 별도 산정(폐형식 또는 등가 판 FE)하여 `load_cases` 로 입력한다.")
+        a("- 판축 합력은 사용자가 별도 산정하여 `load_cases` 로 입력한다. 압력차는 `loads.dP_max` 를 주면 C-4 폐형식으로 자동 평가한다(§7b).")
         return "\n".join(L) + "\n"
 
 
@@ -356,6 +416,9 @@ def _selfcheck() -> None:
     # 판축 케이스가 국부 변환을 거치는지 (β=60, N_xp 만 → 국부 N_x, N_y, N_xy 모두 비영)
     raw3 = json.loads(json.dumps(raw)); raw3["load_cases"] = [dict(name="c", axes="plate", zone="left", N=[10, 0, 0])]
     rc = PlateModel(prepare(raw3)).load_results[0]; assert all(abs(v) > 1e-6 for v in rc.N_local)
+    raw4 = json.loads(json.dumps(raw)); raw4["loads"]["dP_max"] = 1.0; raw4["loads"]["high_pressure_face"] = "crest"; raw4["material"]["S_allow"] = 140.0
+    pr = PlateModel(prepare(raw4)).pressure_results[0]
+    assert abs(pr["max_vm"] - 156.64) < 0.1 and pr["verdict"] == "NG" and abs(pr["lattice"]["a"] - 10.3923) < 1e-3, pr["max_vm"]
     out = os.path.join(here, "..", "out", "_selfcheck"); run(os.path.join(here, "plate_input_template.yaml"), out)
     for fn in ("report.md", "results.json", "sections.inp"): assert os.path.getsize(os.path.join(out, fn)) > 500
     import shutil; shutil.rmtree(out)

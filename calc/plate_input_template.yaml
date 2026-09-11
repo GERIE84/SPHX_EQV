@@ -70,12 +70,14 @@ material:                           # docs/05 §2.5
   corrosion_allowance: 0.0
   tolerance: {p: null, H: null, t: null}
 
-loads:                              # docs/04 D절
+loads:                              # docs/04 D절.  dP_max 를 주면 C-4 압력차 폐형식(docs/12) 이 보고서 §7b 에 자동 생성된다
   P_plate_side: null                # MPa
   P_shell_side: null
-  dP_max: null                      # 판 양면 최대 압력차
-  high_pressure_face: null          # crest | valley  (고압측이 산 쪽인지 골 쪽인지)
-  P_test: null
+  dP_max: 1.0                       # 판 양면 최대 압력차 [MPa]  ※ 예시값(가정) — 실제 설계 압력차로 교체
+  high_pressure_face: crest         # crest(+z, 산 쪽이 고압) | valley(−z)  → 지지선은 반대쪽 능선
+  inplane_restraint: free           # free (판 가로 방향 자유, 거시 N_x=0, 설계값) | fixed (가로 변위 0, 아치 작용 하한)
+  P_test: null                      # 수압시험 압력 (한쪽면 단독 가압 가정 → 같은 절차로 평가)
+  S_allow_test: null                # 시험 조건 허용응력 (null → material.S_allow)
   dT_across_plate: null             # °C
   N_cycles: null
   design_code: null                 # ASME VIII Div.1 | Div.2 | EN 13445 | company

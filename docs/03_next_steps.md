@@ -37,7 +37,8 @@
 - [x] 파이썬 모듈로 등가 물성치 계산 함수 구현 (입력: 형상 파라미터, 재료; 출력: 등가 물성치, 등가 두께) — 2026-09-10 `calc/plate_model.py` (YAML → report.md / results.json / sections.inp; 전처리 규칙, 경고, 하중 케이스 응력 복원·판정), `docs/10_calc_module.md`, 예시 출력 `docs/example_report/`
   - [ ] 실제 판 치수 수령 후 템플릿 기입·실행 (경고 항목 해소: t_min, D_e/W_e, S_allow)
 - [x] 엑셀 계산 시트 동일 로직 구현 (설계 현장 사용용) — 2026-09-10 `calc/SPHX_EQV_calc.xlsx` (생성기 `calc/make_excel_sheet.py`; 원호+접선 단면, 채택식, 등가 두께, ±β 영역 강성, APDL 문자열, 산·골 VAM 응력·판정; `formulas` 평가로 파이썬 대비 1.5e-7 일치, docs/10 §7)
-  - [ ] 실제 엑셀에서 열어 재계산·드롭다운·서식 확인 (이 환경에는 Calc 없음)
+  - [x] 실제 엑셀에서 열어 확인 — 2026-09-11 `Rc` 이름(R1C1 표기 RC) 무효로 복구 오류 발생 → 이름 변경·규칙 검사 추가로 조치. 재확인 요청
+  - [ ] 조치 후 실제 엑셀에서 재계산·드롭다운·Pressure 시트 확인
 - [x] 파라메트릭 스터디 (β, H/p, t/p, R_c/t) — 2026-09-10 `calc/parametric.py`, `docs/11_parametric_study.md`, `docs/param_study/*.csv`, `docs/fig/param_*.png`
   - [x] $K_t = 1+6f/t$ 및 $A_{22}/A_{11}$ 비의 $f/t$, $H/p$ 의존성 포함 — 결론: $t_b$는 두께와 무관한 형상량, $N_x$·$M_{xy}$ 응력 ∝ $t^{-2}$, 반경은 2차 인자, $\bar D_{16}$ 연성 0.9 수준으로 16/26 항 필수
 

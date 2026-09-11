@@ -48,7 +48,9 @@ BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 # 정의 이름 규칙: 셀 주소와 같은 이름(A11, D66, I1, J2, C1, Z1 …) 은 엑셀에서 불가, 이름은 대소문자 구분 없음(H_ ≠ h_ 불가).
 # 소스에서는 읽기 쉬운 짧은 이름을 쓰고, 셀에 쓸 때 아래 맵으로 치환한다.
 # R_b 는 R_B(모드 B 반경)와 대소문자 충돌 → R_supp
-RENAME = {"H_": "H_mid", "h_": "h_calc", "q_": "q_int", "R_a": "R_load", "R_b": "R_supp", "I1": "I_1", "I2": "I_2", "J1": "J_1", "J2": "J_2",
+RENAME = {"H_": "H_mid", "h_": "h_calc", "q_": "q_int", "R_a": "R_load", "R_b": "R_supp",
+          "Rc": "R_crest", "Rv": "R_valley", "Rs": "R_sum", "CC": "C_ye",   # CC 는 열 문자와 같아 예방적으로 변경        # "Rc" 는 R1C1 참조 표기(RC) 와 같아 엑셀이 무효 이름으로 삭제함 (2026-09-11 복구 오류)
+          "I1": "I_1", "I2": "I_2", "J1": "J_1", "J2": "J_2",
           "I2c": "I_2c", "I2v": "I_2v", "I2f": "I_2f", "c1": "c_1", "c2": "c_2", "c4": "c_4", "z1": "z_1", "z2": "z_2"}
 for _pre in "AD":
     for _ij in ("11", "12", "22", "66", "16", "26"):
@@ -58,8 +60,18 @@ for _pre in "AD":
 _RE_NAME = re.compile(r"\b(" + "|".join(sorted(map(re.escape, RENAME), key=len, reverse=True)) + r")\b")
 
 
+_RE_BAD_NAME = re.compile(r"^(?:[A-Za-z]{1,3}[0-9]+|[RrCc]|[Rr][0-9]*[Cc][0-9]*|[Rr]\[?-?[0-9]*\]?[Cc]\[?-?[0-9]*\]?|TRUE|FALSE)$")
+
+
+def check_name(name: str) -> str:
+    """엑셀 정의 이름 규칙: A1/R1C1 셀 참조와 같은 형태 불가(A11, RC, R1C1 …), R/C 단독 불가, 첫 글자는 문자/밑줄, 공백·연산자 불가."""
+    if _RE_BAD_NAME.match(name) or not re.match(r"^[A-Za-z_\\][A-Za-z0-9_.\\]*$", name) or len(name) > 255:
+        raise ValueError(f"엑셀에서 무효한 정의 이름: {name!r}")
+    return name
+
+
 def fix_name(name: str) -> str:
-    return RENAME.get(name, name)
+    return check_name(RENAME.get(name, name))
 
 
 def fix_formula(v):
@@ -673,6 +685,11 @@ def build() -> Workbook:
         ck.add(None, "판정 (압력)", '=IF(chk_max_p<0.002,"일치","불일치")', "", "", kind="text")
     ck.note("참조값은 calc/plate_model.py 실행 결과(docs/example_report/results.json)를 생성 시점에 복사한 하드코딩 값이다 (파랑).")
 
+    lowered = {}
+    for nm in wb.defined_names.keys():
+        lowered.setdefault(nm.lower(), []).append(nm)
+    dup = {k: v for k, v in lowered.items() if len(v) > 1}
+    assert not dup, f"대소문자만 다른 정의 이름 충돌: {dup}"
     wb.calculation.fullCalcOnLoad = True          # openpyxl 은 캐시값을 쓰지 않으므로 열 때 전체 재계산
     wb.move_sheet("README", offset=-len(wb.sheetnames))
     for ws_ in wb.worksheets:
